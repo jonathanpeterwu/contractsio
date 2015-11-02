@@ -30,6 +30,7 @@ var sass = require('node-sass-middleware');
  */
 var homeController = require('./controllers/home');
 var userController = require('./controllers/user');
+var transactionController = require('./controllers/transaction');
 var apiController = require('./controllers/api');
 var contactController = require('./controllers/contact');
 
@@ -119,6 +120,16 @@ app.post('/account/profile', passportConf.isAuthenticated, userController.postUp
 app.post('/account/password', passportConf.isAuthenticated, userController.postUpdatePassword);
 app.post('/account/delete', passportConf.isAuthenticated, userController.postDeleteAccount);
 app.get('/account/unlink/:provider', passportConf.isAuthenticated, userController.getOauthUnlink);
+
+/**
+ * Transaction app routes.
+ */
+ app.get('/transaction', transactionController.getTransactions);
+ // app.get('/transaction/:id', transactionController.getTransaction);
+ app.get('/transaction/new', transactionController.createTransaction);
+ app.post('/transaction', transactionController.postTransaction);
+ // app.put('/transaction', transactionController.updateTransaction);
+ // app.delete('/transaction', transactionController.deleteTransaction);
 
 /**
  * API examples routes.

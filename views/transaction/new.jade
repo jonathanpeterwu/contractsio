@@ -1,0 +1,34 @@
+extends ../layout
+
+block content
+  .page-header
+    h3 Create Transaction
+
+  form.form-horizontal(action='/transaction', method='POST')
+    input(type='hidden', name='_csrf', value=_csrf)
+    .form-group
+      label.col-sm-3.control-label(for='sender') Send To
+      .col-sm-7
+        input.form-control(type='email', name='receiver', id='receiver', value='#{receiver}')
+    .form-group
+      label.col-sm-3.control-label(for='receiver') Send From
+      .col-sm-7
+        input.form-control(type='email', name='sender', id='sender', value='#{sender}')
+    .form-group
+      label.col-sm-3.control-label(for='value') Amount
+      .col-sm-7
+        input.form-control(type='text', name='value', id='value', value='#{value}')
+    .form-group
+      label.col-sm-3.control-label(for='multiSignaure') Multi-Signature
+      .col-sm-4
+        label.radio.col-sm-4
+          input(type='radio', checked=multiSignature=='true', name='true', value='true', data-toggle='radio')
+          span Needs Signature
+        label.radio.col-sm-4
+          input(type='radio', checked=multiSignatur=='false', name='false', value='false', data-toggle='radio')
+          span No Signature
+    .form-group
+      .col-sm-offset-3.col-sm-4
+        button.btn.btn.btn-primary(type='submit')
+          i.fa.fa-pencilr
+          | Update Profile

@@ -125,10 +125,10 @@ app.get('/account/unlink/:provider', passportConf.isAuthenticated, userControlle
  * Transaction app routes.
  */
  app.get('/transaction', transactionController.getTransactions);
- // app.get('/transaction/:id', transactionController.getTransaction);
  app.get('/transaction/new', transactionController.createTransaction);
+ app.get('/transaction/:id', transactionController.getTransaction);
  app.post('/transaction', transactionController.postTransaction);
- // app.put('/transaction', transactionController.updateTransaction);
+ app.put('/transaction', transactionController.updateTransaction);
  // app.delete('/transaction', transactionController.deleteTransaction);
 
 /**

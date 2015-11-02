@@ -7,6 +7,7 @@ var transactionSchema = new mongoose.Schema({
   receiver: { type: String, default: ''},
   value: { type: Number, default : 0},
   currency: { type: String, default: 'USD'},
+  status: {type: String, enum: ['initiated', 'pending', 'completed'] },
   rules: {
     multiSignature: { type: Boolean, default: false},
     fileUpload: { type: Boolean, default: false},

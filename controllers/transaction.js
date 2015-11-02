@@ -11,28 +11,26 @@ var secrets = require('../config/secrets');
 exports.getTransactions = function(req, res) {
   Transaction.find({}, function(err, transactions) {
     console.log(transactions)
-    res.send({transactions: transactions});
-    // res.render('transaction/all', {
-      // title: 'Transactions',
-      // transactions: transactions
-    // });
+    res.render('transaction/index', {
+      title: 'Transactions',
+      transactions: transactions
+    });
   });
 };
 
-// /**
-//  * GET /transaction/:id
-//  * Transaction page.
-//  */
-// exports.getTransaction = function(req, res) {
-//   Transaction.findOne({_id: req.body.id }, function(err, transaction) {
-//     console.log(transaction)
-//     res.send({ });
-//     // res.render('transaction/single', {
-//       // title: 'Transaction',
-//       // transction: transction
-//     // });
-//   });
-// };
+/**
+ * GET /transaction/:id
+ * Transaction page.
+ */
+exports.getTransaction = function(req, res) {
+  Transaction.findOne({_id: req.body.id }, function(err, transaction) {
+    console.log(transaction)
+    res.render('transaction/index', {
+      title: 'Transaction',
+      transactions: [transaction]
+    });
+  });
+};
 
 
 /**
@@ -57,6 +55,7 @@ exports.postTransaction = function(req, res, next) {
     receiver: req.body.receiver,
     value: req.body.value,
     currency: req.body.currency,
+    status: 'initiated',
     rules: {
       multiSignature: req.body.multiSignature || false,
       fileUpload: req.body.fileUpload || false,
@@ -77,33 +76,42 @@ exports.postTransaction = function(req, res, next) {
 /**
  * Update profile information.
  */
-// exports.postUpdateProfile = function(req, res, next) {
-//   User.findById(req.user.id, function(err, user) {
-//     if (err) return next(err);
-//     user.email = req.body.email || '';
-//     user.profile.name = req.body.name || '';
-//     user.profile.gender = req.body.gender || '';
-//     user.profile.location = req.body.location || '';
-//     user.profile.website = req.body.website || '';
-//     user.profile.number = req.body.number || '';
-//
-//     user.save(function(err) {
-//       if (err) return next(err);
-//       req.flash('success', { msg: 'Profile information updated.' });
-//       res.redirect('/account');
-//     });
-//   });
-// };
+exports.updateTransaction = function(req, res, next) {
+  Transaction.findById(req.transaction.id, function(err, transaction) {
+    // Add error checking to see if logged in / if authorized
+    if (err) return next(err);
+
+    transaction.sender = req.body.sender || '' ;
+    transaction.receiver = req.body.receiver || '' ;
+    transaction.value = req.body.value || '' ;
+    transaction.currency = req.body.currency || '' ;
+
+    transaction.rules.multiSignature = req.body.multiSignature || '' ;
+    transaction.rules.packageConfirmation = req.body.packageConfirmation || '' ;
+    transaction.rules.fileUpload = req.body.fileUpload || '' ;
+    transaction.rules.thirdPartyAuthentication = req.body.thirdPartyAuthentication || '' ;
+    transaction.rules.escrowPeriod = req.body.escrowPeriod || '' ;
+
+    transaction.save(function(err) {
+      if (err) return next(err);
+      req.flash('success', { msg: 'Transaction information updated.' });
+      res.redirect('/transaction/' + transaction._id);
+    });
+  });
+};
 
 // /**
 //  * POST /account/delete
 //  * Delete user account.
 //  */
-// exports.postDeleteAccount = function(req, res, next) {
-//   User.remove({ _id: req.user.id }, function(err) {
-//     if (err) return next(err);
-//     req.logout();
-//     req.flash('info', { msg: 'Your account has been deleted.' });
-//     res.redirect('/');
-//   });
-// };
+exports.deleteTransaction = function(req, res, next) {
+  // Do not allow for now;
+  return req.flash('errors', { error: 'This is not alllowed'});
+
+  // Transaction.remove({ _id: req.transaction.id }, function(err) {
+  //   if (err) return next(err);
+  //   req.logout();
+  //   req.flash('info', { msg: 'Your account has been deleted.' });
+  //   res.redirect('/');
+  // });
+};

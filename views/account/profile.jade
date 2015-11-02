@@ -32,6 +32,10 @@ block content
       .col-sm-7
         input.form-control(type='text', name='website', id='website', value='#{user.profile.website}')
     .form-group
+      label.col-sm-3.control-label(for='number') Phone Number
+      .col-sm-7
+        input.form-control(type='text', name='number', id='number', value='#{user.profile.number}')
+    .form-group
       label.col-sm-3.control-label(for='gravatar') Gravatar
       .col-sm-4
         img(src="#{user.gravatar()}", class='profile', width='100', height='100')

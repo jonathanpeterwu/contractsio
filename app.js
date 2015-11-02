@@ -11,12 +11,15 @@ var logger = require('morgan');
 var errorHandler = require('errorhandler');
 var lusca = require('lusca');
 var methodOverride = require('method-override');
+var _ = require('underscore');
 
-var _ = require('lodash');
+
+// Database setup
 var MongoStore = require('connect-mongo')(session);
+var mongoose = require('mongoose');
+
 var flash = require('express-flash');
 var path = require('path');
-var mongoose = require('mongoose');
 var passport = require('passport');
 var expressValidator = require('express-validator');
 var sass = require('node-sass-middleware');
@@ -49,6 +52,7 @@ mongoose.connection.on('error', function() {
   console.log('MongoDB Connection Error. Please make sure that MongoDB is running.');
   process.exit(1);
 });
+
 
 /**
  * Express configuration.

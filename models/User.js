@@ -1,6 +1,14 @@
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
 var mongoose = require('mongoose');
+//
+// User.sync({force: true}).then(function () {
+//   // Table created
+//   return User.create({
+//     firstName: 'John',
+//     lastName: 'Hancock'
+//   });
+// });
 
 var userSchema = new mongoose.Schema({
   email: { type: String, unique: true, lowercase: true },
@@ -18,6 +26,7 @@ var userSchema = new mongoose.Schema({
     name: { type: String, default: '' },
     gender: { type: String, default: '' },
     location: { type: String, default: '' },
+    number: { type: String, default: '' },
     website: { type: String, default: '' },
     picture: { type: String, default: '' }
   },

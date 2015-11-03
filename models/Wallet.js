@@ -1,20 +1,49 @@
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
+var auth  = require('../config/auth');
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
 var walletSchema = new mongoose.Schema({
-  sender: { type: String, default: ''},
-  receiver: { type: String, default: ''},
-  value: { type: Number, default : 0},
+  _owner: {type: Schema.Types.ObjectId, ref: 'User' },
+  balance: { typ:  Number, default: 0 },
+  transactions: [{ type: Schema.ObjectId, ref: 'Transaction' }],
+  pin: { type: Number, minlength: 4 },
+  publicKey:  { type: String },
+  privateKey:  { type: String },
   currency: { type: String, default: 'USD'},
-  status: {type: String, enum: ['initiated', 'pending', 'completed'] },
   rules: {
-    multiSignature: { type: Boolean, default: false},
-    fileUpload: { type: Boolean, default: false},
-    packageConfirmation: { type: Boolean, default: false},
-    thirdPartyAuthentication: { type: Boolean, default: false},
-    escrowPeriod: { type: Boolean, default: false }
+    twoFactorAuthentication: { type: Boolean, default: false},
+    emailAlert: { type: Boolean, default: true},
+    textAlert: { type: Boolean, default: false}
   }
 });
+
+walletSchema.statics.create = function(data, cb) {
+  var publicKey = auth.generatePublicKey();
+  var privateKey = auth.generatePrivateKey();
+
+  var wallet = new this({
+    _owner: data._owner,
+    balance: data.balance,
+    transactions: [],
+    pin: data.pin,
+    publicKey: publicKey,
+    privateKey: privateKey,
+    currency: data.currency || 'USD',
+    rules: {
+      twoFactorAuthentication: data.twofactor || false,
+      emailAlert: data.emailAlert || true,
+      textAlert: data.textAlert || false
+    }
+  });
+
+  // TODO add error checking
+  wallet.save(function(err) {
+    if (err) return console.log(err);
+    cb();
+  });
+};
+
 
 module.exports = mongoose.model('Wallet', walletSchema);

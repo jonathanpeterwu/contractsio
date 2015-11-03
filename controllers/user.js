@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var passport = require('passport');
 var User = require('../models/User');
+var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 
 /**
@@ -94,10 +95,27 @@ exports.postSignup = function(req, res, next) {
     }
     user.save(function(err) {
       if (err) return next(err);
-      req.logIn(user, function(err) {
+
+      // Create wallet
+      Wallet.create({
+        _owner: user._id,
+        balance: 0,
+        transactions: [],
+        pin: 1234,
+        currency: 'USD',
+        rules: {
+          twoFactorAuthentication: false,
+          emailAlert: true,
+          textAlert: false
+        }
+      }, function(err) {
         if (err) return next(err);
-        res.redirect('/');
+        req.logIn(user, function(err) {
+          if (err) return next(err);
+          res.redirect('/');
+        });
       });
+
     });
   });
 };

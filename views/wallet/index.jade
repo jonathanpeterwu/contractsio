@@ -1,0 +1,17 @@
+extends ../layout
+
+block content
+  .page-header
+    h3 Wallets
+    div
+      ul
+        each w in wallets
+          h3 #{w._id}
+          p #{w._owner.email}
+          p #{w.balance}
+          p #{w.pin}
+          p #{w.publicKey}
+          p #{w.transactions}
+          p #{w.privateKey}
+          p #{w.currency}
+          hr

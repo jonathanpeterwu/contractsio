@@ -1,9 +1,9 @@
 {
-  "name": "hackathon-starter",
-  "version": "3.1.0",
+  "name": "Contracts-API",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sahat/hackathon-starter.git"
+    "url": "https://github.com/jonathanapeterwu/conractsio.git"
   },
   "scripts": {
     "start": "node app.js",
@@ -58,9 +58,10 @@
     "request": "^2.65.0",
     "rethinkdb": "^2.1.1",
     "serve-favicon": "^2.3.0",
+    "speakeasy": "^1.0.3",
     "stripe": "^4.0.0",
     "tumblr.js": "^0.0.5",
-    "twilio": "^2.5.1",
+    "twilio": "^2.5.2",
     "twit": "^2.1.1",
     "uglify-js": "^2.5.0",
     "underscore": "^1.8.3",

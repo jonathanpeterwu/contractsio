@@ -2,6 +2,7 @@ var _ = require('underscore');
 var async = require('async');
 var crypto = require('crypto');
 var Transaction = require('../models/Transaction');
+var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 
 /**
@@ -50,25 +51,36 @@ exports.createTransaction = function(req, res, next) {
  * Create a new transaction.
  */
 exports.postTransaction = function(req, res, next) {
-  var transaction = new Transaction({
-    sender: req.body.sender,
-    receiver: req.body.receiver,
-    value: req.body.value,
-    currency: req.body.currency,
-    status: 'initiated',
-    rules: {
-      multiSignature: req.body.multiSignature || false,
-      fileUpload: req.body.fileUpload || false,
-      packageConfirmation: req.body.packageConfirmation || false,
-      thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
-      escrowPeriod: req.body.escrowPeriod || false
-    }
-  });
+  // Attach wallet ID based on logged in user
+  if (!req.session.id) return next('User is not logged in');
+  if (!req.user._id)  return next('User is not logged in');
 
-  // TODO add error checking
-  transaction.save(function(err) {
-    if (err) return next(err);
-    res.redirect('/transaction');
+  Wallet.findOne({ "_owner": req.user._id}, function(err, wallet) {
+    if (err || !wallet) return next(err);
+
+    var transaction = new Transaction({
+      sender: req.body.sender,
+      receiver: req.body.receiver,
+      value: req.body.value,
+      currency: req.body.currency,
+      status: 'initiated',
+      rules: {
+        multiSignature: req.body.multiSignature || false,
+        fileUpload: req.body.fileUpload || false,
+        packageConfirmation: req.body.packageConfirmation || false,
+        thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
+        escrowPeriod: req.body.escrowPeriod || false
+      }
+    });
+
+    // Add reference to user wallet
+    wallet.transactions.push(transaction._id);
+
+    transaction.save(function(err) {
+      if (err) return next(err);
+      wallet.save(function(err) { if (err) console.log(err)});
+      res.redirect('/transaction');
+    });
   });
 };
 

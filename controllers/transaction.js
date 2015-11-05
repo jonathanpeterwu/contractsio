@@ -52,43 +52,82 @@ exports.createTransaction = function(req, res, next) {
  * Create a new transaction.
  */
 exports.postTransaction = function(req, res, next) {
-  // Attach wallet ID based on logged in user
   if (!req.session.id) return next('User is not logged in');
   if (!req.user._id)  return next('User is not logged in');
 
-
-  var transaction = new Transaction({
-    sender: req.user.email,
-    receiver: req.body.receiver,
-    value: req.body.value,
-    currency: req.body.currency,
-    status: 'initiated',
-    rules: {
-      multiSignature: req.body.multiSignature || false,
-      fileUpload: req.body.fileUpload || false,
-      packageConfirmation: req.body.packageConfirmation || false,
-      thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
-      escrowPeriod: req.body.escrowPeriod || false
+  async.parallel([
+    function(callback){
+      User.findOne({email: req.body.email}, function(err, user) {
+        if (!user) user = 'New user';
+        callback(null, user);
+      });
+    },
+    function(callback){
+      User.findOne({email: req.user.email}, function(err, user) {
+        if (!user) user = 'New user';
+        callback(null, user);
+      });
     }
-  });
+  ],
+  function(err, results){
+    var receiverUser = results[0];
+    var senderUser = results[1];
 
-  User.findOne({email: req.body.email}, function(err, user) {
-    if (!user) return user = 'New user';
-    if (user === 'New user') console.log('new user send email to them');
-  });
+    async.parallel([
+      function(callback){
+        Wallet.findOne({"_owner": receiverUser._id}, function(err, receiverWallet) {
+          if (err || !receiverWallet) return callback(err);
+          callback(null, receiverWallet);
+        });
+      },
+      function(callback){
+        Wallet.findOne({ "_owner": senderUser._id}, function(err, senderWallet) {
+          if (err || !senderWallet) return callback(err);
+          if (!req.user.email) return callback('No user email');
+          if (senderWallet.balance < req.body.value) return callback('Not enough money!!');
+          callback(null, senderWallet);
+        });
+      }
+    ],
+    function(err, results){
+      var receiverWallet = results[0];
+      var senderWallet = results[1];
 
-  transaction.save(function(err) {
-    if (err) return next(err);
+      console.log(receiverWallet, senderWallet)
+      console.log(senderUser.email, receiverUser.email, req.body.value)
+      var transaction = new Transaction({
+        sender: senderUser._id,
+        receiver: receiverUser._id,
+        value: req.body.value,
+        status: 'initiated',
+        rules: {
+          multiSignature: req.body.multiSignature || false,
+        //   fileUpload: req.body.fileUpload || false,
+        //   packageConfirmation: req.body.packageConfirmation || false,
+        //   thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
+        //   escrowPeriod: req.body.escrowPeriod || false
+        }
+      });
 
-    Wallet.findOne({ "_owner": req.user._id}, function(err, wallet) {
-      if (err || !wallet) return callback(err);
-      if (!req.user.email) return callback('No user email');
       // Add reference to user wallet
-      wallet.transactions.push(transaction._id);
+      senderWallet.transactions.push(transaction._id);
+      receiverWallet.transactions.push(transaction._id);
+      console.log('sender', senderWallet.balance, receiverWallet.balance)
+      //Update wallet value
+      senderWallet.balance -= req.body.value;
+      receiverWallet.balance = parseInt(receiverWallet.balance) + parseInt(req.body.value)
+      console.log('receiver', senderWallet.balance, receiverWallet.balance)
 
-      wallet.save(function(err) {
+      transaction.save(function(err) {
         if (err) return next(err);
-        res.redirect('/transaction');
+        senderWallet.save(function(err) {
+          if (err) return next(err);
+          receiverWallet.save(function(err){
+            console.log('got here')
+            if (err) return next(err);
+            res.redirect('/transaction');
+          });
+        });
       });
     });
   });

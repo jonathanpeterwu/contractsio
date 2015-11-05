@@ -6,12 +6,12 @@ block content
     div
       ul
         each w in wallets
-          h3 #{w._id}
-          p #{w._owner.email}
-          p #{w.balance}
-          p #{w.pin}
-          p #{w.publicKey}
-          p #{w.transactions}
-          p #{w.privateKey}
-          p #{w.currency}
+          h3 Email: #{w._owner.email}
+          p User ID: #{w._id}
+          p Account Balance: #{w.balance}
+          p Currency:#{w.currency}
+          p Pin: #{w.pin}
+          p Public Key: #{w.publicKey}
+          p Private Key: #{w.privateKey}
+          p Transaction Objects#{w.transactions}
           hr

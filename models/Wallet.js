@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 
 var walletSchema = new mongoose.Schema({
   _owner: {type: Schema.Types.ObjectId, ref: 'User' },
-  balance: { typ:  Number, default: 0 },
+  balance: {type: Number, default: 0 },
   transactions: [{ type: Schema.ObjectId, ref: 'Transaction' }],
   pin: { type: Number, minlength: 4 },
   publicKey:  { type: String },
@@ -23,9 +23,11 @@ walletSchema.statics.create = function(data, cb) {
   var publicKey = auth.generatePublicKey();
   var privateKey = auth.generatePrivateKey();
 
+  console.log(data.balance);
+
   var wallet = new this({
     _owner: data._owner,
-    balance: data.balance,
+    balance: data.balance || 0,
     transactions: [],
     pin: data.pin,
     publicKey: publicKey,

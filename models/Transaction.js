@@ -1,10 +1,11 @@
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
 var transactionSchema = new mongoose.Schema({
-  sender: { type: String, default: ''},
-  receiver: { type: String, default: ''},
+  sender: {type: Schema.Types.ObjectId, ref: 'User' },
+  receiver: {type: Schema.Types.ObjectId, ref: 'User' },
   value: { type: Number, default : 0},
   currency: { type: String, default: 'USD'},
   status: {type: String, enum: ['initiated', 'pending', 'completed'] },

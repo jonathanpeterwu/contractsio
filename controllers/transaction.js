@@ -3,6 +3,7 @@ var async = require('async');
 var crypto = require('crypto');
 var Transaction = require('../models/Transaction');
 var Wallet = require('../models/Wallet');
+var User = require('../models/User');
 var secrets = require('../config/secrets');
 
 /**
@@ -55,31 +56,40 @@ exports.postTransaction = function(req, res, next) {
   if (!req.session.id) return next('User is not logged in');
   if (!req.user._id)  return next('User is not logged in');
 
-  Wallet.findOne({ "_owner": req.user._id}, function(err, wallet) {
-    if (err || !wallet) return next(err);
 
-    var transaction = new Transaction({
-      sender: req.body.sender,
-      receiver: req.body.receiver,
-      value: req.body.value,
-      currency: req.body.currency,
-      status: 'initiated',
-      rules: {
-        multiSignature: req.body.multiSignature || false,
-        fileUpload: req.body.fileUpload || false,
-        packageConfirmation: req.body.packageConfirmation || false,
-        thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
-        escrowPeriod: req.body.escrowPeriod || false
-      }
-    });
+  var transaction = new Transaction({
+    sender: req.user.email,
+    receiver: req.body.receiver,
+    value: req.body.value,
+    currency: req.body.currency,
+    status: 'initiated',
+    rules: {
+      multiSignature: req.body.multiSignature || false,
+      fileUpload: req.body.fileUpload || false,
+      packageConfirmation: req.body.packageConfirmation || false,
+      thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
+      escrowPeriod: req.body.escrowPeriod || false
+    }
+  });
 
-    // Add reference to user wallet
-    wallet.transactions.push(transaction._id);
+  User.findOne({email: req.body.email}, function(err, user) {
+    if (!user) return user = 'New user';
+    if (user === 'New user') console.log('new user send email to them');
+  });
 
-    transaction.save(function(err) {
-      if (err) return next(err);
-      wallet.save(function(err) { if (err) console.log(err)});
-      res.redirect('/transaction');
+  transaction.save(function(err) {
+    if (err) return next(err);
+
+    Wallet.findOne({ "_owner": req.user._id}, function(err, wallet) {
+      if (err || !wallet) return callback(err);
+      if (!req.user.email) return callback('No user email');
+      // Add reference to user wallet
+      wallet.transactions.push(transaction._id);
+
+      wallet.save(function(err) {
+        if (err) return next(err);
+        res.redirect('/transaction');
+      });
     });
   });
 };
@@ -93,16 +103,15 @@ exports.updateTransaction = function(req, res, next) {
     // Add error checking to see if logged in / if authorized
     if (err) return next(err);
 
-    transaction.sender = req.body.sender || '' ;
-    transaction.receiver = req.body.receiver || '' ;
-    transaction.value = req.body.value || '' ;
-    transaction.currency = req.body.currency || '' ;
+    transaction.receiver = req.body.receiver || transaction.receiver;
+    transaction.value = req.body.value || transaction.vaue;
+    transaction.currency = req.body.currency || transaction.currency;
 
-    transaction.rules.multiSignature = req.body.multiSignature || '' ;
-    transaction.rules.packageConfirmation = req.body.packageConfirmation || '' ;
-    transaction.rules.fileUpload = req.body.fileUpload || '' ;
-    transaction.rules.thirdPartyAuthentication = req.body.thirdPartyAuthentication || '' ;
-    transaction.rules.escrowPeriod = req.body.escrowPeriod || '' ;
+    transaction.rules.multiSignature = req.body.multiSignature || transaction.receiver;
+    transaction.rules.packageConfirmation = req.body.packageConfirmation;
+    transaction.rules.fileUpload = req.body.fileUpload;
+    transaction.rules.thirdPartyAuthentication = req.body.thirdPartyAuthentication;
+    transaction.rules.escrowPeriod = req.body.escrowPeriod;
 
     transaction.save(function(err) {
       if (err) return next(err);

@@ -1,5 +1,3 @@
-var bcrypt = require('bcrypt-nodejs');
-var crypto = require('crypto');
 var auth  = require('../config/auth');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
@@ -41,7 +39,7 @@ walletSchema.statics.create = function(data, cb) {
   // TODO add error checking
   wallet.save(function(err) {
     if (err) return console.log(err);
-    cb();
+    cb(null, wallet);
   });
 };
 

@@ -88,6 +88,7 @@ exports.postSignup = function(req, res, next) {
     password: req.body.password
   });
 
+  //TODO REFACTOR
   User.findOne({ email: req.body.email }, function(err, existingUser) {
     if (existingUser) {
       req.flash('errors', { msg: 'Account with that email address already exists.' });
@@ -108,14 +109,20 @@ exports.postSignup = function(req, res, next) {
           emailAlert: true,
           textAlert: false
         }
-      }, function(err) {
+      }, function(err, wallet) {
         if (err) return next(err);
-        req.logIn(user, function(err) {
-          if (err) return next(err);
-          res.redirect('/');
+
+        // Reference wallet on user model
+        user.wallets.push(wallet._id);
+
+        wallet.save(function(err) {
+          if (err) next(err);
+          req.logIn(user, function(err) {
+            if (err) return next(err);
+            res.redirect('/');
+          });
         });
       });
-
     });
   });
 };

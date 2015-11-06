@@ -30,7 +30,7 @@ var userSchema = new mongoose.Schema({
     website: { type: String, default: '' },
     picture: { type: String, default: '' }
   },
-
+  wallets: [{type: Schema.Types.ObjectId, ref: 'Wallet' }],
   resetPasswordToken: String,
   resetPasswordExpires: Date
 });

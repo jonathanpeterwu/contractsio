@@ -1,9 +1,9 @@
 var _ = require('underscore');
 var async = require('async');
-var crypto = require('crypto');
 var Transaction = require('../models/Transaction');
 var Wallet = require('../models/Wallet');
 var User = require('../models/User');
+var Signature = require('../models/User');
 var secrets = require('../config/secrets');
 
 /**
@@ -56,40 +56,84 @@ exports.postTransaction = function(req, res, next) {
   if (!req.session.id) return next('User is not logged in');
   if (!req.user._id)  return next('User is not logged in');
 
-
-  var transaction = new Transaction({
-    sender: req.user.email,
-    receiver: req.body.receiver,
-    value: req.body.value,
-    currency: req.body.currency,
-    status: 'initiated',
-    rules: {
-      multiSignature: req.body.multiSignature || false,
-      fileUpload: req.body.fileUpload || false,
-      packageConfirmation: req.body.packageConfirmation || false,
-      thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
-      escrowPeriod: req.body.escrowPeriod || false
-    }
-  });
-
-  User.findOne({email: req.body.email}, function(err, user) {
-    if (!user) return user = 'New user';
-    if (user === 'New user') console.log('new user send email to them');
-  });
-
-  transaction.save(function(err) {
-    if (err) return next(err);
-
-    Wallet.findOne({ "_owner": req.user._id}, function(err, wallet) {
-      if (err || !wallet) return callback(err);
-      if (!req.user.email) return callback('No user email');
-      // Add reference to user wallet
-      wallet.transactions.push(transaction._id);
-
-      wallet.save(function(err) {
-        if (err) return next(err);
-        res.redirect('/transaction');
+  //Query users and populate wallets
+  async.parallel = ([
+    function(callback) {
+      User.findOne({email: req.user.email}.populate('wallets'), function(err, user) {
+        if (err) return callback(err);
+        if (!user) callback('No user found');
+        callback(null, user);
       });
+    },
+    function(callback) {
+      User.findOne({email: req.body.email}).populate('wallets'), function(err, user) {
+        if (err) return callback(err);
+        if (!user) callback('No user found');
+        callback(null, user);
+      });
+    }
+  ], function(err, results) {
+    var sender = results[0];
+    var receiver = results[1];
+    var senderWallet = sender.wallets[0];
+    var receiverWallet = receiver.wallets[0];
+
+    // Error check
+    if (senderWallet.balance < req.body.value) next('Not enough value on wallet');
+
+    // Create signaure object
+    if (req.body.multiSignature) {
+      var signature = new Signature({
+        sender: sneder._id,
+        receiver: receiver._id,
+        status: 'pending'
+      });
+    }
+    // Create Transaction
+    var transaction = new Transaction({
+      sender: req.user._id,
+      receiver: r.email,
+      value: req.body.value,
+      currency: req.body.currency,
+      status: 'initiated',
+      rules: { multiSignature: req.body.multiSignature || false }
+    });
+
+    senderWallet.balance -= parseInt(req.body.value);
+    receiverWallet.balance += parseInt(req.body.value);
+
+    // Save transaction and wallets
+    async.parallel = ([
+      function(callback) {
+       transaction.save(function(err) {
+         if (err) return calback(err);
+         callback();
+       });
+      },
+      function(callback) {
+        senderWallet.save(function(err) {
+          if (err) return callback(err);
+          callback();
+        });
+      },
+      function(callback) {
+        receiverWallet.save(function(err) {
+          if (err) return callback(err);
+          callback();
+        });
+      },
+      function(callback) {
+        if (signature) {
+          signature.save(function(err) {
+            if (err) return callback(err);
+            return callback();
+          });
+        }
+        callback();
+      },
+    ], function(err, results) {
+       if (err) return next(err);
+       res.redirect('/transaction');
     });
   });
 };
@@ -103,7 +147,7 @@ exports.updateTransaction = function(req, res, next) {
     // Add error checking to see if logged in / if authorized
     if (err) return next(err);
 
-    transaction.receiver = req.body.receiver || transaction.receiver;
+    transaction.receiver = req.body.email || transaction.email;
     transaction.value = req.body.value || transaction.vaue;
     transaction.currency = req.body.currency || transaction.currency;
 

@@ -1,44 +1,22 @@
-![Alt](https://lh4.googleusercontent.com/-PVw-ZUM9vV8/UuWeH51os0I/AAAAAAAAD6M/0Ikg7viJftQ/w1286-h566-no/hackathon-starter-logo.jpg)
-Hackathon Starter [![Dependency Status](https://david-dm.org/sahat/hackathon-starter/status.svg?style=flat)](https://david-dm.org/sahat/hackathon-starter) [![Build Status](http://img.shields.io/travis/sahat/hackathon-starter.svg?style=flat)](https://travis-ci.org/sahat/hackathon-starter) [![Analytics](https://ga-beacon.appspot.com/UA-47447818-2/hackathon-starter?pixel)](https://github.com/igrigorik/ga-beacon)
+Hackathon Starter [![Dependency Status](https://david-dm.org/jonathanpeterwu/contractsio.svg) [![Build Status](http://img.shields.io/travis/sahat/hackathon-starter.svg?style=flat)](https://travis-ci.org/sahat/hackathon-starter) [![Analytics](https://ga-beacon.appspot.com/UA-47447818-2/hackathon-starter?pixel)](https://github.com/igrigorik/ga-beacon)
 =======================
 
-[![Join the chat at https://gitter.im/sahat/hackathon-starter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sahat/hackathon-starter?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Thinkful Pair on Node](https://tf-assets-staging.s3.amazonaws.com/badges/thinkful_repo_badge.svg)](http://start.thinkful.com/node/)
-
-**Live Demo**: http://hackathonstarter.herokuapp.com
+**Live Demo**:  Pending
 
 Jump to [What's new in 3.2.0?](#changelog)
 
-A boilerplate for **Node.js** web applications.
+Backend API and lightweight express static site for Contracts API.
 
-If you have attended any hackathons in the past, then you know how much time it takes to
-get a project started: decide on what to build, pick a programming language, pick a web framework,
-pick a CSS framework. A while later, you might have an initial project up on GitHub and only then
-can other team members start contributing. Or how about doing something as simple as *Sign in with Facebook*
-authentication? You can spend hours on it if you are not familiar with how OAuth 2.0 works.
-
-When I started this project, my primary focus was on **simplicity** and **ease of use**.
-I also tried to make it as **generic** and **reusable** as possible to cover most use cases of hackathon web apps,
-without being too specific. In the worst case you can use this as a learning guide for your projects,
-if for example you are only interested in **Sign in with Google** authentication and nothing else.
-
-Chances are you do not need all authentication methods or API examples. As of **Hackathon Starter 2.1**
-it is possible to selectively check which authentication methods you need by running `node setup.js`.
+Focus is on lightweight fast payments, transaction, wallet tracking, and trustless contract completion.
 
 <h4 align="center">Modern Theme</h4>
 
 ![](https://lh6.googleusercontent.com/-KQTmCFNK6MM/U7OZpznjDuI/AAAAAAAAERc/h3jR27Uy1lE/w1366-h1006-no/Screenshot+2014-07-02+01.32.22.png)
 
-<h4 align="center">Flatly Bootstrap Theme</h4>
-
-![](https://lh5.googleusercontent.com/-oJ-7bSYisRY/U1a-WhK_LoI/AAAAAAAAECM/a04fVYgefzw/w1474-h1098-no/Screen+Shot+2014-04-22+at+3.08.33+PM.png)
 
 <h4 align="center">API Examples</h4>
 
 ![](https://lh5.googleusercontent.com/-BJD2wK8CvC8/VLodBsyL-NI/AAAAAAAAEx0/SafE6o_qq_I/w1818-h1186-no/Screenshot%2B2015-01-17%2B00.25.49.png)
-
-<h4 align="center">Hackathon Starter Generator</h4>
-
-![](https://lh4.googleusercontent.com/-ncBLUzq6czE/U3KkYE0UXsI/AAAAAAAAEEM/YsZeIqOlZg8/w1288-h874-no/Screenshot+2014-05-13+19.01.15.png)
 
 Table of Contents
 -----------------

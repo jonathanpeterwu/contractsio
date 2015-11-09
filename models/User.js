@@ -1,6 +1,8 @@
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
 //
 // User.sync({force: true}).then(function () {
 //   // Table created

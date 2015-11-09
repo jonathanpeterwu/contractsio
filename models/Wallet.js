@@ -23,7 +23,7 @@ walletSchema.statics.create = function(data, cb) {
 
   var wallet = new this({
     _owner: data._owner,
-    balance: data.balance,
+    balance: data.balance || 0,
     transactions: [],
     pin: data.pin,
     publicKey: publicKey,

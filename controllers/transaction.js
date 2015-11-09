@@ -56,86 +56,124 @@ exports.postTransaction = function(req, res, next) {
   if (!req.session.id) return next('User is not logged in');
   if (!req.user._id)  return next('User is not logged in');
 
-  //Query users and populate wallets
-  async.parallel = ([
-    function(callback) {
-      User.findOne({email: req.user.email}.populate('wallets'), function(err, user) {
-        if (err) return callback(err);
-        if (!user) callback('No user found');
-        callback(null, user);
+  User.findOne({email: req.user.email}).populate('wallets').exec(function(err, user) {
+    if (err) return console.log(err);
+    if (!user) console.log('No user found');
+    User.findOne({email: req.body.email}).populate('wallets').exec(function(err, newUser) {
+      if (err) return console.log(err);
+      if (!newUser) console.log('No newUser found');
+
+      var sender = user;
+      var receiver = newUser;
+      var senderWallet = sender.wallets[0];
+      var receiverWallet = receiver.wallets[0];
+
+      // Error check
+      if (senderWallet.balance < req.body.value) console.log('Not enough value on wallet');
+
+      Wallet.update({id: senderWallet._id}, { $inc : { 'balance': -parseInt(req.body.value)}}, function(err, wallet) {
+        console.log(err, wallet)
       });
-    },
-    function(callback) {
-      User.findOne({email: req.body.email}).populate('wallets'), function(err, user) {
-        if (err) return callback(err);
-        if (!user) callback('No user found');
-        callback(null, user);
+      Wallet.update({id: receiverWallet._id}, { $inc : { 'balance': parseInt(req.body.value)}}, function(err, wallet) {
+        console.log(err, wallet)
       });
-    }
-  ], function(err, results) {
-    var sender = results[0];
-    var receiver = results[1];
-    var senderWallet = sender.wallets[0];
-    var receiverWallet = receiver.wallets[0];
 
-    // Error check
-    if (senderWallet.balance < req.body.value) next('Not enough value on wallet');
-
-    // Create signaure object
-    if (req.body.multiSignature) {
-      var signature = new Signature({
-        sender: sneder._id,
-        receiver: receiver._id,
-        status: 'pending'
-      });
-    }
-    // Create Transaction
-    var transaction = new Transaction({
-      sender: req.user._id,
-      receiver: r.email,
-      value: req.body.value,
-      currency: req.body.currency,
-      status: 'initiated',
-      rules: { multiSignature: req.body.multiSignature || false }
-    });
-
-    senderWallet.balance -= parseInt(req.body.value);
-    receiverWallet.balance += parseInt(req.body.value);
-
-    // Save transaction and wallets
-    async.parallel = ([
-      function(callback) {
-       transaction.save(function(err) {
-         if (err) return calback(err);
-         callback();
-       });
-      },
-      function(callback) {
-        senderWallet.save(function(err) {
-          if (err) return callback(err);
-          callback();
-        });
-      },
-      function(callback) {
-        receiverWallet.save(function(err) {
-          if (err) return callback(err);
-          callback();
-        });
-      },
-      function(callback) {
-        if (signature) {
-          signature.save(function(err) {
-            if (err) return callback(err);
-            return callback();
-          });
-        }
-        callback();
-      },
-    ], function(err, results) {
-       if (err) return next(err);
-       res.redirect('/transaction');
     });
   });
+
+
+  //
+  // //Query users and populate wallets
+  // async.parallel = ([
+  //   function(callback) {
+  //     User.findOne({email: req.user.email}).populate('wallets').exec(function(err, user) {
+  //       if (err) return callback(err);
+  //       if (!user) callback('No user found');
+  //       callback(null, user);
+  //     });
+  //   },
+  //   function(callback) {
+  //     User.findOne({email: req.body.email}).populate('wallets').exec(function(err, user) {
+  //       if (err) return callback(err);
+  //       if (!user) callback('No user found');
+  //       callback(null, user);
+  //     });
+  //   }
+  // ], function(err, results) {
+  //   var sender = results[0];
+  //   var receiver = results[1];
+  //   var senderWallet = sender.wallets[0];
+  //   var receiverWallet = receiver.wallets[0];
+  //
+  //   console.log(sender, receiver);
+  //   // Error check
+  //   if (senderWallet.balance < req.body.value) next('Not enough value on wallet');
+  //
+  //   // Create signaure object
+  //   if (req.body.multiSignature) {
+  //     console.log('require signature')
+  //     var signature = new Signature({
+  //       sender: sneder._id,
+  //       receiver: receiver._id,
+  //       status: 'pending'
+  //     });
+  //   }
+  //
+  //
+  //   // Create Transaction
+  //   var transaction = new Transaction({
+  //     sender: req.user._id,
+  //     receiver: r.email,
+  //     value: req.body.value,
+  //     currency: req.body.currency,
+  //     status: 'initiated',
+  //     rules: { multiSignature: req.body.multiSignature || false }
+  //   });
+  //
+  //   console.log('new transaction created', transaction);
+  //
+  //
+  //   senderWallet.balance -= parseInt(req.body.value);
+  //   receiverWallet.balance += parseInt(req.body.value);
+  //
+  //
+  //   console.log('new balances', senderWallet.balance, receiverWallet.balance);
+  //
+  //   // Save transaction and wallets
+  //   async.parallel = ([
+  //     function(callback) {
+  //      transaction.save(function(err) {
+  //        if (err) return calback(err);
+  //        callback();
+  //      });
+  //     },
+  //     function(callback) {
+  //       senderWallet.save(function(err) {
+  //         if (err) return callback(err);
+  //         callback();
+  //       });
+  //     },
+  //     function(callback) {
+  //       receiverWallet.save(function(err) {
+  //         if (err) return callback(err);
+  //         callback();
+  //       });
+  //     },
+  //     function(callback) {
+  //       if (signature) {
+  //         signature.save(function(err) {
+  //           if (err) return callback(err);
+  //           return callback();
+  //         });
+  //       }
+  //       callback();
+  //     },
+  //   ], function(err, results) {
+  //
+  //      if (err) return next(err);
+  //      res.redirect('/transaction');
+  //   });
+  // });
 };
 
 

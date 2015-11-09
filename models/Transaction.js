@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
 var transactionSchema = new mongoose.Schema({
   sender: {type: Schema.Types.ObjectId, ref: 'User' },

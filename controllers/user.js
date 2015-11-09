@@ -100,7 +100,7 @@ exports.postSignup = function(req, res, next) {
       // Create wallet
       Wallet.create({
         _owner: user._id,
-        balance: 0,
+        balance: 100,
         transactions: [],
         pin: 1234,
         currency: 'USD',
@@ -115,7 +115,7 @@ exports.postSignup = function(req, res, next) {
         // Reference wallet on user model
         user.wallets.push(wallet._id);
 
-        wallet.save(function(err) {
+        user.save(function(err) {
           if (err) next(err);
           req.logIn(user, function(err) {
             if (err) return next(err);

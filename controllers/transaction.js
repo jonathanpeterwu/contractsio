@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var Transaction = require('../models/Transaction');
 var Wallet = require('../models/Wallet');
 var User = require('../models/User');
+var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
 
 /**
@@ -76,17 +77,17 @@ exports.postTransaction = function(req, res, next) {
     }
   ],
   function(err, results){
-    var receiverUser = results[0];
-    var senderUser = results[1];
-    var receiverWallet = receiverUser.wallets[0];
-    var senderWallet = senderUser.wallets[0];
+    var receiver = results[0];
+    var sender = results[1];
+    var receiverWallet = receiver.wallets[0];
+    var senderWallet = sender.wallets[0];
     var wait = false;
 
     if (senderWallet.balance < req.body.value) return done('Not enough money!!');
 
     var transaction = new Transaction({
-      sender: senderUser._id,
-      receiver: receiverUser._id,
+      sender: sender._id,
+      receiver: receiver._id,
       value: req.body.value,
       status: 'initiated',
       rules: {
@@ -102,30 +103,31 @@ exports.postTransaction = function(req, res, next) {
     senderWallet.transactions.push(transaction._id);
     receiverWallet.transactions.push(transaction._id);
 
-    // status pending for multisignature from both parties
+    var rules = [];
     if (req.body.multiSignature) {
       wait = true;
       transaction.status = 'pending';
+      rules.push('multiSignature');
     }
-    // add file upload field
     if (req.body.fileUpload) {
       wait = true;
       transaction.status = 'pending';
+      rules.push('fileUpload');
     }
-    // add package confirmation field
     if (req.body.packageConfirmation) {
       wait = true;
       transaction.status = 'pending';
+      rules.push('packageConfirmation');
     }
-    // check for third party information
     if (req.body.thirdPartyAuthentication) {
       wait = true;
       transaction.status = 'pending';
+      rules.push('thirdPartyAuthentication');
     }
-    // add pending period date.
     if (req.body.escrowPeriod) {
       wait = true;
       transaction.status = 'pending';
+      rules.push('escrowPeriod');
     }
 
     // Complete Transaction
@@ -141,7 +143,22 @@ exports.postTransaction = function(req, res, next) {
         if (err) return next(err);
         receiverWallet.save(function(err){
           if (err) return next(err);
-          res.redirect('/transaction');
+
+          // Create Notification
+          if (transaction.status === 'pending') {
+            Notification.create({
+              sender: sender._id,
+              receiver: receiver._id,
+              transaction: transaction._id,
+              rules: rules
+            }, function(err, notification) {
+              console.log(notification);
+              if (err) return next(err);
+              res.redirect('/transaction');
+            });
+          } else {
+            res.redirect('/transaction');
+          }
         });
       });
     });

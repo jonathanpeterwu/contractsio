@@ -31,6 +31,7 @@ var sass = require('node-sass-middleware');
 var homeController = require('./controllers/home');
 var userController = require('./controllers/user');
 var transactionController = require('./controllers/transaction');
+var notificationController = require('./controllers/notification');
 var walletController = require('./controllers/wallet');
 var apiController = require('./controllers/api');
 var contactController = require('./controllers/contact');
@@ -131,6 +132,12 @@ app.get('/account/unlink/:provider', passportConf.isAuthenticated, userControlle
  app.post('/transaction', transactionController.postTransaction);
  app.put('/transaction', transactionController.updateTransaction);
  // app.post('/transaction', transactionController.deleteTransaction);
+
+/**
+* Notification app routes.
+*/
+app.get('/notification', notificationController.getNotifications);
+app.get('/notification/:id', notificationController.getNotification);
 
 /**
 * Wallet app routes.

@@ -1,0 +1,14 @@
+extends ../layout
+
+block content
+  .page-header
+    h3 Notifications
+    div
+      ul
+        each n in notifications
+          h3 Sender Email: #{n.sender.email}
+          a.btn.btn-default(href='/notification/#{n._id}', role='button') View notification »
+          each r in n.rules
+            p Rule: #{r}
+          p Transaction: #{n.transaction}
+          hr

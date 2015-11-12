@@ -7,11 +7,9 @@ block content
       ul
         each w in wallets
           h3 Email: #{w._owner.email}
-          p User ID: #{w._id}
+          p Wallet ID: #{w._id}
           p Account Balance: #{w.balance}
           p Currency:#{w.currency}
-          p Pin: #{w.pin}
           p Public Key: #{w.publicKey}
-          p Private Key: #{w.privateKey}
           p Transaction Objects#{w.transactions}
           hr

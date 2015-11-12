@@ -41,9 +41,15 @@ exports.getTransaction = function(req, res) {
 */
 
 exports.createTransaction = function(req, res, next) {
-  res.render('transaction/new', {
-    title: 'Transaction'
+  User.find({}, function(err, users) {
+    console.log(users)
+    if (err) return next(err);
+    res.render('transaction/new', {
+      title: 'Transaction',
+      users: users
+    });
   });
+
 };
 
 
@@ -57,13 +63,13 @@ exports.postTransaction = function(req, res, next) {
 
   async.parallel([
     function(callback){
-      User.findOne({email: req.body.email}, function(err, user) {
+      User.findOne({email: req.body.email}).populate('wallets').exec(function(err, user) {
         if (!user) user = 'New user';
         callback(null, user);
       });
     },
     function(callback){
-      User.findOne({email: req.user.email}, function(err, user) {
+      User.findOne({email: req.user.email}).populate('wallets').exec(function(err, user) {
         if (!user) user = 'New user';
         callback(null, user);
       });
@@ -72,61 +78,70 @@ exports.postTransaction = function(req, res, next) {
   function(err, results){
     var receiverUser = results[0];
     var senderUser = results[1];
+    var receiverWallet = receiverUser.wallets[0];
+    var senderWallet = senderUser.wallets[0];
+    var wait = false;
 
-    async.parallel([
-      function(callback){
-        Wallet.findOne({"_owner": receiverUser._id}, function(err, receiverWallet) {
-          if (err || !receiverWallet) return callback(err);
-          callback(null, receiverWallet);
-        });
-      },
-      function(callback){
-        Wallet.findOne({ "_owner": senderUser._id}, function(err, senderWallet) {
-          if (err || !senderWallet) return callback(err);
-          if (!req.user.email) return callback('No user email');
-          if (senderWallet.balance < req.body.value) return callback('Not enough money!!');
-          callback(null, senderWallet);
-        });
+    if (senderWallet.balance < req.body.value) return done('Not enough money!!');
+
+    var transaction = new Transaction({
+      sender: senderUser._id,
+      receiver: receiverUser._id,
+      value: req.body.value,
+      status: 'initiated',
+      rules: {
+        multiSignature: req.body.multiSignature || false,
+        fileUpload: req.body.fileUpload || false,
+        packageConfirmation: req.body.packageConfirmation || false,
+        thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
+        escrowPeriod: req.body.escrowPeriod || false
       }
-    ],
-    function(err, results){
-      var receiverWallet = results[0];
-      var senderWallet = results[1];
+    });
 
-      console.log(receiverWallet, senderWallet)
-      console.log(senderUser.email, receiverUser.email, req.body.value)
-      var transaction = new Transaction({
-        sender: senderUser._id,
-        receiver: receiverUser._id,
-        value: req.body.value,
-        status: 'initiated',
-        rules: {
-          multiSignature: req.body.multiSignature || false,
-        //   fileUpload: req.body.fileUpload || false,
-        //   packageConfirmation: req.body.packageConfirmation || false,
-        //   thirdPartyAuthentication: req.body.thirdPartyAuthentication || false,
-        //   escrowPeriod: req.body.escrowPeriod || false
-        }
-      });
+    // Add reference to user wallet
+    senderWallet.transactions.push(transaction._id);
+    receiverWallet.transactions.push(transaction._id);
 
-      // Add reference to user wallet
-      senderWallet.transactions.push(transaction._id);
-      receiverWallet.transactions.push(transaction._id);
-      console.log('sender', senderWallet.balance, receiverWallet.balance)
-      //Update wallet value
+    // status pending for multisignature from both parties
+    if (req.body.multiSignature) {
+      wait = true;
+      transaction.status = 'pending';
+    }
+    // add file upload field
+    if (req.body.fileUpload) {
+      wait = true;
+      transaction.status = 'pending';
+    }
+    // add package confirmation field
+    if (req.body.packageConfirmation) {
+      wait = true;
+      transaction.status = 'pending';
+    }
+    // check for third party information
+    if (req.body.thirdPartyAuthentication) {
+      wait = true;
+      transaction.status = 'pending';
+    }
+    // add pending period date.
+    if (req.body.escrowPeriod) {
+      wait = true;
+      transaction.status = 'pending';
+    }
+
+    // Complete Transaction
+    if (!wait) {
       senderWallet.balance -= req.body.value;
       receiverWallet.balance = parseInt(receiverWallet.balance) + parseInt(req.body.value)
-      console.log('receiver', senderWallet.balance, receiverWallet.balance)
+      transaction.status = 'completed';
+    }
 
-      transaction.save(function(err) {
+    transaction.save(function(err) {
+      if (err) return next(err);
+      senderWallet.save(function(err) {
         if (err) return next(err);
-        senderWallet.save(function(err) {
+        receiverWallet.save(function(err){
           if (err) return next(err);
-          receiverWallet.save(function(err){
-            console.log('got here')
-            if (err) return next(err);
-            res.redirect('/transaction');
-          });
+          res.redirect('/transaction');
         });
       });
     });

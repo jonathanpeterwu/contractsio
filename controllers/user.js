@@ -25,6 +25,7 @@ exports.getLogin = function(req, res) {
 exports.postLogin = function(req, res, next) {
   req.assert('email', 'Email is not valid').isEmail();
   req.assert('password', 'Password cannot be blank').notEmpty();
+  req.assert('pin', 'Pin cannot be blank').notEmpty();
 
   var errors = req.validationErrors();
 
@@ -39,11 +40,17 @@ exports.postLogin = function(req, res, next) {
       req.flash('errors', { msg: info.message });
       return res.redirect('/login');
     }
-    req.logIn(user, function(err) {
-      if (err) return next(err);
-      req.flash('success', { msg: 'Success! You are logged in.' });
-      res.redirect(req.session.returnTo || '/');
-    });
+
+    if (user.pin == req.body.pin) {
+      req.logIn(user, function(err) {
+        if (err) return next(err);
+        req.flash('success', { msg: 'Success! You are logged in.' });
+        return res.redirect('/');
+      });
+    } else {
+      req.flash('errors', { msg: 'Invalid pin entry' });
+      return res.redirect('/login');
+    }
   })(req, res, next);
 };
 
@@ -75,6 +82,7 @@ exports.postSignup = function(req, res, next) {
   req.assert('email', 'Email is not valid').isEmail();
   req.assert('password', 'Password must be at least 8 characters long').len(8);
   req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
+  req.assert('pin', 'Pin must be at least 4 characters long').len(4);
 
   var errors = req.validationErrors();
 
@@ -83,9 +91,16 @@ exports.postSignup = function(req, res, next) {
     return res.redirect('/signup');
   }
 
+  if (req.body.pin === '0000' || req.body.pin === '1234' ) {
+    req.flash('errors', { msg: 'Please use a stronger pin' });
+    return res.redirect('/signup');
+  }
+
+
   var user = new User({
     email: req.body.email,
-    password: req.body.password
+    password: req.body.password,
+    pin: req.body.pin
   });
 
   User.findOne({ email: req.body.email }, function(err, existingUser) {
@@ -96,23 +111,29 @@ exports.postSignup = function(req, res, next) {
     user.save(function(err) {
       if (err) return next(err);
 
+      // Create ethereum  account - store keys privately
+
       // Create wallet
       Wallet.create({
         _owner: user._id,
-        balance: 0,
+        balance: 1000,
         transactions: [],
-        pin: 1234,
         currency: 'USD',
         rules: {
           twoFactorAuthentication: false,
           emailAlert: true,
           textAlert: false
         }
-      }, function(err) {
+      }, function(err, wallet) {
         if (err) return next(err);
-        req.logIn(user, function(err) {
+
+        user.wallets.push(wallet._id);
+        user.save(function(err) {
           if (err) return next(err);
-          res.redirect('/');
+          req.logIn(user, function(err) {
+            if (err) return next(err);
+            res.redirect('/');
+          });
         });
       });
 

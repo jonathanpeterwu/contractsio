@@ -1,7 +1,8 @@
 var bcrypt = require('bcrypt-nodejs');
 var crypto = require('crypto');
 var mongoose = require('mongoose');
-//
+var Schema = mongoose.Schema;
+
 // User.sync({force: true}).then(function () {
 //   // Table created
 //   return User.create({
@@ -13,6 +14,7 @@ var mongoose = require('mongoose');
 var userSchema = new mongoose.Schema({
   email: { type: String, unique: true, lowercase: true },
   password: String,
+  pin: { type: Number, minlength: 4, required: true },
 
   facebook: String,
   twitter: String,
@@ -32,7 +34,9 @@ var userSchema = new mongoose.Schema({
   },
 
   resetPasswordToken: String,
-  resetPasswordExpires: Date
+  resetPasswordExpires: Date,
+
+  wallets: [{type: Schema.Types.ObjectId, ref: 'Wallet' }]
 });
 
 /**
@@ -61,6 +65,16 @@ userSchema.methods.comparePassword = function(candidatePassword, cb) {
   });
 };
 
+/**
+ * Helper method for validating pin's password.
+ */
+userSchema.methods.comparePin = function(candidatePin, cb) {
+  if (this.pin == candidatePin) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
 /**
  * Helper method for getting user's gravatar.
  */

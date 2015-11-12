@@ -24,8 +24,12 @@ exports.getWallets = function(req, res) {
  * wallet page.
  */
 exports.getWallet = function(req, res) {
-  Wallet.findOne({_id: req.body.id }).populate('transactions').exec(function(err, wallet) {
-    console.log(wallet)
+  // TODO only allow user associated with wallet to load/view wallet
+  Wallet.findOne({_id: req.params.id }).populate('transactions').exec(function(err, wallet) {
+    if (err) {
+      req.flash({'errors': { msg: err} });
+      return res.redirect('/');
+    }
     res.render('wallet/index', {
       title: 'wallet',
       wallets: [wallet]

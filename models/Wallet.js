@@ -8,7 +8,6 @@ var walletSchema = new mongoose.Schema({
   _owner: {type: Schema.Types.ObjectId, ref: 'User' },
   balance: {type: Number, default: 0 },
   transactions: [{ type: Schema.ObjectId, ref: 'Transaction' }],
-  pin: { type: Number, minlength: 4 },
   publicKey:  { type: String },
   privateKey:  { type: String },
   currency: { type: String, default: 'USD'},
@@ -29,7 +28,6 @@ walletSchema.statics.create = function(data, cb) {
     _owner: data._owner,
     balance: data.balance || 0,
     transactions: [],
-    pin: data.pin,
     publicKey: publicKey,
     privateKey: privateKey,
     currency: data.currency || 'USD',
@@ -43,7 +41,7 @@ walletSchema.statics.create = function(data, cb) {
   // TODO add error checking
   wallet.save(function(err) {
     if (err) return console.log(err);
-    cb();
+    cb(null, wallet);
   });
 };
 

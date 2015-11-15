@@ -10,7 +10,11 @@ block content
           a.btn.btn-default(href='/notification/#{n._id}', role='button') View notification »
           br
           if needsSignature
-            a.btn.btn-default(href='/verification/#{n._id}', role='button') Needs signature »
+            if n.status === 'unread'
+              a.btn.btn-default(href='/verification/#{n._id}', role='button') Needs signature »
+          if n.status === 'read'
+            br
+            p Notification has been read
           each r in n.rules
             p Rule: #{r}
           p Transaction: #{n.transaction}

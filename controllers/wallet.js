@@ -39,17 +39,6 @@ exports.getWallet = function(req, res) {
 
 
 /**
-* GET /wallet/new
-* Create a new wallet.
-*/
-//
-// exports.createWallet = function(req, res, next) {
-//   res.render('wallet/new', {
-//     title: 'wallet'
-//   });
-// };
-
-/**
  * POST /wallet
  * Create a new wallet.
  */

@@ -10,8 +10,11 @@ var auth = require('../config/auth');
  * notifications page.
  */
 exports.getNotifications = function(req, res) {
-  Notification.find({receiver: req.user._id, status: 'pending'}).populate('receiver sender transaction').exec(function(err, notifications) {
-    if (err) return next(err);
+  Notification.find({receiver: req.user.id}).populate('receiver sender transaction').exec(function(err, notifications) {
+    if (err) {
+      req.flash({'errors': { msg: err} });
+      return res.redirect('/');
+    }
     res.render('notification/index', {
       title: 'Notifications',
       notifications: notifications
@@ -24,11 +27,21 @@ exports.getNotifications = function(req, res) {
  * notifications page.
  */
 exports.getNotification = function(req, res) {
-  Notification.findOne({receiver: req.user._id, id: req.params.id}).populate('receiver sender transaction').exec(function(err, notification) {
-    if (err) return next(err);
+  Notification.findOne({_id: req.params.id}).populate('receiver sender transaction').exec(function(err, notification) {
+
+    // TODO only allow querying of notifications by receiver
+    if (err || !notification) {
+      req.flash({'errors': { msg: err} });
+      return res.redirect('/');
+    }
+
+    var needsSignature = notification.rules.indexOf('multiSignature') !== -1;
+
     res.render('notification/index', {
-      title: 'Notifications',
-      notifications: [notification]
+      title: 'notification',
+      notifications: [notification],
+      needsSignature: needsSignature
     });
+
   });
 };

@@ -6,8 +6,6 @@ block content
 
   form.form-horizontal(action='/transaction', method='POST')
     input(type='hidden', name='_csrf', value=_csrf)
-    each u in users
-      p #{u.email}
     .form-group
       label.col-sm-3.control-label(for='sender') Send To
       .col-sm-7

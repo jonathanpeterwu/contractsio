@@ -8,6 +8,9 @@ block content
         each n in notifications
           h3 Sender Email: #{n.sender.email}
           a.btn.btn-default(href='/notification/#{n._id}', role='button') View notification »
+          br
+          if needsSignature
+            a.btn.btn-default(href='/verification/#{n._id}', role='button') Needs signature »
           each r in n.rules
             p Rule: #{r}
           p Transaction: #{n.transaction}

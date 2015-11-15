@@ -33,6 +33,7 @@ var userController = require('./controllers/user');
 var transactionController = require('./controllers/transaction');
 var notificationController = require('./controllers/notification');
 var walletController = require('./controllers/wallet');
+var verificationController = require('./controllers/verification');
 var apiController = require('./controllers/api');
 var contactController = require('./controllers/contact');
 
@@ -140,14 +141,18 @@ app.get('/notification', notificationController.getNotifications);
 app.get('/notification/:id', notificationController.getNotification);
 
 /**
+* Verification app routes.
+*/
+app.get('/verification/:id', verificationController.getVerifications);
+app.post('/verification/:id', verificationController.postVerification);
+
+/**
 * Wallet app routes.
 */
 app.get('/wallet', walletController.getWallets);
 app.get('/wallet/:id', walletController.getWallet);
-// app.get('/wallet/new', walletController.createWallet);
 app.post('/wallet', walletController.postWallet);
 app.put('/wallet', walletController.updateWallet);
-// app.post('/wallet', walletController.deleteWallet);
 
 
 /**

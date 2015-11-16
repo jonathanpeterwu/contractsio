@@ -12,7 +12,7 @@ var secrets = require('../config/secrets');
  * Transactions page.
  */
 exports.getTransactions = function(req, res) {
-  Transaction.find({'sender': req.user._id}, function(err, transactions) {
+  Transaction.find({}, function(err, transactions) {
     console.log(transactions)
     res.render('transaction/index', {
       title: 'Transactions',
@@ -64,31 +64,27 @@ exports.postTransaction = function(req, res, next) {
 
   async.parallel([
     function(callback){
-      User.findOne({email: req.body.email}).populate('wallets').exec(function(err, user) {
-        if (!user) user = 'New user';
-        callback(null, user);
+      User.findOne({email: req.body.email}).populate('wallets').exec(function(err, requestUser) {
+        if (!requestUser) requestUser = 'New requestUser';
+        callback(null, requestUser);
       });
     },
     function(callback){
-      User.findOne({email: req.user.email}).populate('wallets').exec(function(err, user) {
-        if (!user) user = 'New user';
-        callback(null, user);
+      User.findOne({email: req.user.email}).populate('wallets').exec(function(err, currentUser) {
+        if (!currentUser) currentUser = 'New currentUser';
+        callback(null, currentUser);
       });
     }
   ],
   function(err, results){
-    var receiver = results[0];
-    var sender = results[1];
-    var receiverWallet = receiver.wallets[0];
-    var senderWallet = sender.wallets[0];
+    var requestUser = results[0];
+    var currentUser = results[1];
+    var requestWallet = requestUser.wallets[0];
+    var currentWallet = currentUser.wallets[0];
     var wait = false;
-
-    if (senderWallet.balance < req.body.value) return done('Not enough money!!');
-
     var transaction = new Transaction({
-      sender: sender._id,
-      receiver: receiver._id,
       value: req.body.value,
+      type: req.body.type,
       status: 'initiated',
       rules: {
         multiSignature: req.body.multiSignature || false,
@@ -100,9 +96,10 @@ exports.postTransaction = function(req, res, next) {
     });
 
     // Add reference to user wallet
-    senderWallet.transactions.push(transaction._id);
-    receiverWallet.transactions.push(transaction._id);
+    currentWallet.transactions.push(transaction._id);
+    requestWallet.transactions.push(transaction._id);
 
+    //Apply rules
     var rules = [];
     if (req.body.multiSignature) {
       wait = true;
@@ -130,25 +127,48 @@ exports.postTransaction = function(req, res, next) {
       rules.push('escrowPeriod');
     }
 
-    // Complete Transaction
-    if (!wait) {
-      senderWallet.balance -= req.body.value;
-      receiverWallet.balance = parseInt(receiverWallet.balance) + parseInt(req.body.value)
-      transaction.status = 'completed';
+    // TODO: if requesting money must require signature
+    if (req.body.type === 'request') {
+      if (currentWallet.balance < req.body.value) return done('Not enough money!!');
+      transaction.sender = requestUser._id;
+      transaction.receiver = currentUser._id;
+      rules.push('multiSignature');
+      transaction.status = 'pending';
+      wait = true;
+      // Complete Transaction
+      if (!wait) {
+        requestWallet.balance -= req.body.value;
+        currentWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value)
+        transaction.status = 'completed';
+      }
     }
+
+    if (req.body.type === 'send') {
+      if (requestWallet.balance < req.body.value) return done('Not enough money!!');
+      transaction.sender = currentUser._id;
+      transaction.receiver = requestUser._id;
+      // Complete Transaction
+      if (!wait) {
+        currentWallet.balance -= req.body.value;
+        requestWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value)
+        transaction.status = 'completed';
+      }
+    }
+
+    console.log(transaction, currentWallet, requestWallet)
 
     transaction.save(function(err) {
       if (err) return next(err);
-      senderWallet.save(function(err) {
+      currentWallet.save(function(err) {
         if (err) return next(err);
-        receiverWallet.save(function(err){
+        requestWallet.save(function(err){
           if (err) return next(err);
 
           // Create Notification
           if (transaction.status === 'pending') {
             Notification.create({
-              sender: sender._id,
-              receiver: receiver._id,
+              sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,
+              receiver: req.body.type === 'request' ?  currentUser._id : requestUser._id,
               transaction: transaction._id,
               rules: rules
             }, function(err, notification) {

@@ -6,6 +6,7 @@ var Schema = mongoose.Schema;
 var transactionSchema = new mongoose.Schema({
   sender: {type: Schema.Types.ObjectId, ref: 'User' },
   receiver: {type: Schema.Types.ObjectId, ref: 'User' },
+  type: { type: String, enum: ['request', 'send']},
   value: { type: Number, default : 0},
   currency: { type: String, default: 'USD'},
   status: {type: String, enum: ['initiated', 'pending', 'completed'] },

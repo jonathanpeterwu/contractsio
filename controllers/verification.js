@@ -37,7 +37,7 @@ exports.postVerification = function(req, res, next) {
       return res.redirect('/login');
     }
 
-
+    // TODO ensure if it is a request transaction to check that
     if (notification.receiver.pin == req.body.pin) {
       // Update notification status
       notification.status = 'read';

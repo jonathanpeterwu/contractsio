@@ -10,6 +10,7 @@ var auth = require('../config/auth');
  * notifications page.
  */
 exports.getNotifications = function(req, res) {
+  // TODO show all transaction sent/received
   Notification.find({receiver: req.user.id}).populate('receiver sender transaction').exec(function(err, notifications) {
     console.log(notifications, notifications.length)
     if (err) {
@@ -29,7 +30,7 @@ exports.getNotifications = function(req, res) {
  */
 exports.getNotification = function(req, res) {
   Notification.findOne({_id: req.params.id}).populate('receiver sender transaction').exec(function(err, notification) {
-    console.log(notifications)
+    console.log(notification)
 
     // TODO only allow querying of notifications by receiver
     if (err || !notification) {

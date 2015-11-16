@@ -11,6 +11,7 @@ var auth = require('../config/auth');
  */
 exports.getNotifications = function(req, res) {
   Notification.find({receiver: req.user.id}).populate('receiver sender transaction').exec(function(err, notifications) {
+    console.log(notifications, notifications.length)
     if (err) {
       req.flash({'errors': { msg: err} });
       return res.redirect('/');
@@ -28,6 +29,7 @@ exports.getNotifications = function(req, res) {
  */
 exports.getNotification = function(req, res) {
   Notification.findOne({_id: req.params.id}).populate('receiver sender transaction').exec(function(err, notification) {
+    console.log(notifications)
 
     // TODO only allow querying of notifications by receiver
     if (err || !notification) {

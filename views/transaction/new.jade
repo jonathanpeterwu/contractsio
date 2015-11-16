@@ -7,7 +7,16 @@ block content
   form.form-horizontal(action='/transaction', method='POST')
     input(type='hidden', name='_csrf', value=_csrf)
     .form-group
-      label.col-sm-3.control-label(for='sender') Send To
+      label.col-sm-3.control-label(for='multiSignature') Type
+      .col-sm-4
+        label.radio.col-sm-4
+          input(type='radio', checked=type=='request', name='type', value='request', data-toggle='radio')
+          span Request
+        label.radio.col-sm-4
+          input(type='radio', checked=type=='receive', name='type', value='receive', data-toggle='radio')
+          span Receive
+    .form-group
+      label.col-sm-3.control-label(for='sender') Username/Email
       .col-sm-7
         input.form-control(type='email', name='email', id='email', value='')
     .form-group
@@ -20,30 +29,7 @@ block content
         label.radio.col-sm-4
           input(type='radio', checked=multiSignature=='true', name='multiSignature', value='true', data-toggle='radio')
           span True
-    .form-group
-      label.col-sm-3.control-label(for='packageConfirmation') Package Confirmation
-      .col-sm-4
-        label.radio.col-sm-4
-          input(type='radio', checked=packageConfirmation=='true', name='packageConfirmation', value='true', data-toggle='radio')
-          span True
-    .form-group
-      label.col-sm-3.control-label(for='fileUpload') File-Upload
-      .col-sm-4
-        label.radio.col-sm-4
-          input(type='radio', checked=fileUpload=='true', name='true', value='fileUpload', data-toggle='radio')
-          span True
-    .form-group
-      label.col-sm-3.control-label(for='thirdPartyAuthentication') 3rd Party Authentication
-      .col-sm-4
-        label.radio.col-sm-4
-          input(type='radio', checked=thirdPartyAuthentication=='true', name='thirdPartyAuthentication', value='true', data-toggle='radio')
-          span True
-    .form-group
-      label.col-sm-3.control-label(for='escrowPeriod') Escrow Period
-      .col-sm-4
-        label.radio.col-sm-4
-          input(type='radio', checked=escrowPeriod=='true', name='escrowPeriod', value='true', data-toggle='radio')
-          span True
+
     .form-group
       .col-sm-offset-3.col-sm-4
         button.btn.btn.btn-primary(type='submit')

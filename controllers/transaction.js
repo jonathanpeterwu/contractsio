@@ -12,7 +12,7 @@ var secrets = require('../config/secrets');
  * Transactions page.
  */
 exports.getTransactions = function(req, res) {
-  Transaction.find({}, function(err, transactions) {
+  Transaction.find({'sender': req.user._id}, function(err, transactions) {
     console.log(transactions)
     res.render('transaction/index', {
       title: 'Transactions',

@@ -67,7 +67,8 @@
     "uglify-js": "^2.5.0",
     "underscore": "^1.8.3",
     "validator": "^4.2.1",
-    "yui": "^3.18.1"
+    "yui": "^3.18.1",
+    "transit-js": "0.8.670"
   },
   "devDependencies": {
     "blessed": "^0.1.81",

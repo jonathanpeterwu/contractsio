@@ -10,11 +10,20 @@ var auth = require('../config/auth');
  * wallets page.
  */
 exports.getWallets = function(req, res) {
-  Wallet.find({}).populate('_owner transactions').exec(function(err, wallets) {
-    console.log(wallets);
-    res.render('wallet/index', {
-      title: 'wallets',
-      wallets: wallets
+  if (!req.user) {
+    return res.redirect('/');
+  }
+
+  Wallet.findOne({'_owner': req.user._id}).populate('transactions').exec(function(err, wallet) {
+    if (err) return res.redirect('/');
+    Wallet.find({}).populate('_owner transactions').exec(function(err, wallets) {
+      if (err) return res.redirect('/');
+      console.log(wallet, wallets)
+      res.render('wallet/index', {
+        title: 'wallets',
+        wallet: wallet,
+        wallets: wallets
+      });
     });
   });
 };
@@ -32,7 +41,8 @@ exports.getWallet = function(req, res) {
     }
     res.render('wallet/index', {
       title: 'wallet',
-      wallets: [wallet]
+      wallet: wallet,
+      wallets: []
     });
   });
 };

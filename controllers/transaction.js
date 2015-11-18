@@ -18,18 +18,15 @@ exports.getTransactions = function(req, res) {
     });
   }
 
-  console.log(req.user._id)
   async.parallel([
       function(callback){
         Transaction.find({sender: req.user._id}, function(err, transactions) {
-          console.log(transactions, 'one')
           if (err) return callback(err);
           return callback(null, transactions)
         });
       },
       function(callback){
         Transaction.find({receiver: req.user_id }, function(err, transactions) {
-          console.log(transactions, 'two')
           if (err) return callback(err);
           return callback(null, transactions)
         });
@@ -39,7 +36,6 @@ exports.getTransactions = function(req, res) {
       req.flash('errors', { msg: err });
     }
     var transactions = results[0].concat(results[1]);
-    console.log(transactions);
     res.render('transaction/index', {
       title: 'Transactions',
       transactions: transactions

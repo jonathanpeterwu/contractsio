@@ -2,13 +2,21 @@ extends ../layout
 
 block content
   .page-header
+    h3 Your wallet
+    div
+      p Wallet ID: #{wallet._id}
+      p Currency:#{wallet.currency}
+      p Balance:#{wallet.balance}
+      p Public Key: #{wallet.publicKey}
+      p Private Key: #{wallet.privateKey}
+      p Transaction Objects#{wallet.transactions}
+      hr
     h3 Wallets
     div
       ul
         each w in wallets
           h3 Email: #{w._owner.email}
           p Wallet ID: #{w._id}
-          p Account Balance: #{w.balance}
           p Currency:#{w.currency}
           p Public Key: #{w.publicKey}
           p Transaction Objects#{w.transactions}

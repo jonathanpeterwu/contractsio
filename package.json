@@ -25,6 +25,7 @@
     "cookie-parser": "^1.4.0",
     "csso": "^1.4.1",
     "errorhandler": "^1.4.2",
+    "ethereumjs-util": "^2.1.0",
     "express": "^4.13.3",
     "express-flash": "^0.0.2",
     "express-session": "^1.12.0",
@@ -61,14 +62,14 @@
     "serve-favicon": "^2.3.0",
     "speakeasy": "^1.0.3",
     "stripe": "^4.0.0",
+    "transit-js": "0.8.670",
     "tumblr.js": "^0.0.5",
     "twilio": "^2.5.2",
     "twit": "^2.1.1",
     "uglify-js": "^2.5.0",
     "underscore": "^1.8.3",
     "validator": "^4.2.1",
-    "yui": "^3.18.1",
-    "transit-js": "0.8.670"
+    "yui": "^3.18.1"
   },
   "devDependencies": {
     "blessed": "^0.1.81",

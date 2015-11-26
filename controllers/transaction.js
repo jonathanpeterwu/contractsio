@@ -6,9 +6,10 @@ var Wallet = require('../models/Wallet');
 var User = require('../models/User');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
+var error = require('../config/error');
+
 /**
  * GET /transaction
- * Transactions page.
  */
 exports.getTransactions = function(req, res) {
   if (!req.user) {
@@ -32,25 +33,22 @@ exports.getTransactions = function(req, res) {
         });
      }
   ], function(err, results) {
-    if (err) {
-      req.flash('errors', { msg: err });
-    }
-    var transactions = results[0].concat(results[1]);
-    res.render('transaction/index', {
+    if (err) return error.send(req, res, err, '/transaction');
+    return res.render('transaction/index', {
       title: 'Transactions',
-      transactions: transactions
+      transactions: results[0].concat(results[1]);
     });
   });
 };
 
 /**
  * GET /transaction/:id
- * Transaction page.
  */
 exports.getTransaction = function(req, res) {
   Transaction.findOne({_id: req.body.id }, function(err, transaction) {
+    if (err) return error.send(req, res, err, '/');
     console.log(transaction)
-    res.render('transaction/index', {
+    return res.render('transaction/index', {
       title: 'Transaction',
       transactions: [transaction]
     });
@@ -60,25 +58,21 @@ exports.getTransaction = function(req, res) {
 
 /**
 * GET /transaction/new
-* Create a new transaction.
 */
-
 exports.createTransaction = function(req, res, next) {
   User.find({}, function(err, users) {
-    console.log(users)
-    if (err) return next(err);
-    res.render('transaction/new', {
+    if (err) return error.send(req, res, err, '/');
+    console.log(users);
+    return res.render('transaction/new', {
       title: 'Transaction',
       users: users
     });
   });
-
 };
 
 
 /**
  * POST /transaction
- * Create a new transaction.
  */
 exports.postTransaction = function(req, res, next) {
   if (!req.session.id) return next('User is not logged in');
@@ -149,32 +143,21 @@ exports.postTransaction = function(req, res, next) {
       rules.push('escrowPeriod');
     }
 
-    // TODO: if requesting money must require signature
     if (req.body.type === 'request') {
-      if (currentWallet.balance < req.body.value) return done('Not enough money!!');
+      if (currentWallet.balance < req.body.value) return next('Not enough money!!');
       transaction.sender = requestUser._id;
       transaction.receiver = currentUser._id;
       rules.push('multiSignature');
       transaction.status = 'pending';
-      wait = true;
-      // Complete Transaction
-      if (!wait) {
-        requestWallet.balance -= req.body.value;
-        currentWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value)
-        transaction.status = 'completed';
-      }
     }
 
     if (req.body.type === 'send') {
-      if (requestWallet.balance < req.body.value) return done('Not enough money!!');
+      if (requestWallet.balance < req.body.value) return next('Not enough money!!');
       transaction.sender = currentUser._id;
       transaction.receiver = requestUser._id;
-      // Complete Transaction
-      if (!wait) {
-        currentWallet.balance -= req.body.value;
-        requestWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value)
-        transaction.status = 'completed';
-      }
+      currentWallet.balance -= req.body.value;
+      requestWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value);
+      transaction.status = 'completed';
     }
 
     console.log(transaction, currentWallet, requestWallet)
@@ -194,8 +177,8 @@ exports.postTransaction = function(req, res, next) {
               transaction: transaction._id,
               rules: rules
             }, function(err, notification) {
-              console.log(notification);
               if (err) return next(err);
+              console.log(notification);
               res.redirect('/transaction');
             });
           } else {
@@ -207,14 +190,13 @@ exports.postTransaction = function(req, res, next) {
   });
 };
 
-
 /**
  * Update profile information.
  */
 exports.updateTransaction = function(req, res, next) {
   Transaction.findById(req.transaction.id, function(err, transaction) {
-    // Add error checking to see if logged in / if authorized
     if (err) return next(err);
+    if (!req.user) return error.send(req, res, 'No user', '/');
 
     transaction.receiver = req.body.receiver || transaction.receiver;
     transaction.value = req.body.value || transaction.vaue;
@@ -232,20 +214,4 @@ exports.updateTransaction = function(req, res, next) {
       res.redirect('/transaction/' + transaction._id);
     });
   });
-};
-
-// /**
-//  * POST /account/delete
-//  * Delete user account.
-//  */
-exports.deleteTransaction = function(req, res, next) {
-  // Do not allow for now;
-  return req.flash('errors', { error: 'This is not alllowed'});
-
-  // Transaction.remove({ _id: req.transaction.id }, function(err) {
-  //   if (err) return next(err);
-  //   req.logout();
-  //   req.flash('info', { msg: 'Your account has been deleted.' });
-  //   res.redirect('/');
-  // });
 };

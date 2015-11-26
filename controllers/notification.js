@@ -4,46 +4,40 @@ var crypto = require('crypto');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
+var error = require('../config/error');
 
 /**
  * GET /notification
- * notifications page.
  */
 exports.getNotifications = function(req, res) {
-  // TODO show all transaction sent/received
-  Notification.find({receiver: req.user.id}).populate('receiver sender transaction').exec(function(err, notifications) {
-    console.log(notifications, notifications.length)
-    if (err) {
-      req.flash({'errors': { msg: err} });
-      return res.redirect('/');
-    }
-    res.render('notification/index', {
-      title: 'Notifications',
-      notifications: notifications
+  Notification.find({receiver: req.user._id}).populate('receiver sender transaction').exec(function(err, receiverNotifications) {
+    Notification.find({sender: req.user._id}).populate('receiver sender transaction').exec(function(err, senderNotifications) {
+
+      if (err) return error.send(req, res, err, '/');
+      console.log(receiverNotifications, senderNotifications);
+
+      return res.render('notification/index', {
+        title: 'Notifications',
+        notifications: receiverNotifications.join(senderNotifications)
+      });
+
     });
   });
 };
 
 /**
  * GET /notification/:id
- * notifications page.
  */
 exports.getNotification = function(req, res) {
-  Notification.findOne({_id: req.params.id}).populate('receiver sender transaction').exec(function(err, notification) {
+   Notification.findOne({_id: req.params.id, receiver: req.user._id}).populate('receiver sender transaction').exec(function(err, notification) {
+
+    if (err || !notification) return error.send(req, res, err, '/');
     console.log(notification)
 
-    // TODO only allow querying of notifications by receiver
-    if (err || !notification) {
-      req.flash({'errors': { msg: err} });
-      return res.redirect('/');
-    }
-
-    var needsSignature = notification.rules.indexOf('multiSignature') !== -1;
-
-    res.render('notification/index', {
+    return res.render('notification/index', {
       title: 'notification',
       notifications: [notification],
-      needsSignature: needsSignature
+      needsSignature:  notification.rules.indexOf('multiSignature') !== -1
     });
 
   });

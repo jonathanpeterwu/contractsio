@@ -6,6 +6,7 @@ var passport = require('passport');
 var User = require('../models/User');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
+var error = require('../config/error');
 
 /**
  * GET /login
@@ -28,35 +29,23 @@ exports.postLogin = function(req, res, next) {
   req.assert('pin', 'Pin cannot be blank').notEmpty();
 
   var errors = req.validationErrors();
-
-  if (errors) {
-    req.flash('errors', errors);
-    return res.redirect('/login');
-  }
+  if (errors) return error.send(req, res, errors, '/login');
 
   passport.authenticate('local', function(err, user, info) {
     if (err) return next(err);
-    if (!user) {
-      req.flash('errors', { msg: info.message });
-      return res.redirect('/login');
-    }
+    if (!user) return error.send(req, res, info.message, '/login');
+    if (user.pin !== req.body.in) return error.send(req, res, 'Invalid pin entry', '/');
 
-    if (user.pin == req.body.pin) {
-      req.logIn(user, function(err) {
-        if (err) return next(err);
-        req.flash('success', { msg: 'Success! You are logged in.' });
-        return res.redirect('/');
-      });
-    } else {
-      req.flash('errors', { msg: 'Invalid pin entry' });
-      return res.redirect('/login');
-    }
+    req.logIn(user, function(err) {
+      if (err) return next(err);
+      req.flash('success', { msg: 'Success! You are logged in.' });
+      return res.redirect('/');
+    });
   })(req, res, next);
 };
 
 /**
  * GET /logout
- * Log out.
  */
 exports.logout = function(req, res) {
   req.logout();
@@ -65,7 +54,6 @@ exports.logout = function(req, res) {
 
 /**
  * GET /signup
- * Signup page.
  */
 exports.getSignup = function(req, res) {
   if (req.user) return res.redirect('/');
@@ -76,7 +64,6 @@ exports.getSignup = function(req, res) {
 
 /**
  * POST /signup
- * Create a new local account.
  */
 exports.postSignup = function(req, res, next) {
   req.assert('email', 'Email is not valid').isEmail();
@@ -96,7 +83,6 @@ exports.postSignup = function(req, res, next) {
     return res.redirect('/signup');
   }
 
-
   var user = new User({
     email: req.body.email,
     password: req.body.password,
@@ -112,7 +98,6 @@ exports.postSignup = function(req, res, next) {
       if (err) return next(err);
 
       // Create ethereum  account - store keys privately
-
       // Create wallet
       Wallet.create({
         _owner: user._id,
@@ -143,7 +128,6 @@ exports.postSignup = function(req, res, next) {
 
 /**
  * GET /account
- * Profile page.
  */
 exports.getAccount = function(req, res) {
   res.render('account/profile', {
@@ -153,7 +137,6 @@ exports.getAccount = function(req, res) {
 
 /**
  * POST /account/profile
- * Update profile information.
  */
 exports.postUpdateProfile = function(req, res, next) {
   User.findById(req.user.id, function(err, user) {
@@ -175,7 +158,6 @@ exports.postUpdateProfile = function(req, res, next) {
 
 /**
  * POST /account/password
- * Update current password.
  */
 exports.postUpdatePassword = function(req, res, next) {
   req.assert('password', 'Password must be at least 4 characters long').len(4);
@@ -203,8 +185,7 @@ exports.postUpdatePassword = function(req, res, next) {
 
 /**
  * POST /account/delete
- * Delete user account.
- */
+s */
 exports.postDeleteAccount = function(req, res, next) {
   User.remove({ _id: req.user.id }, function(err) {
     if (err) return next(err);
@@ -216,7 +197,6 @@ exports.postDeleteAccount = function(req, res, next) {
 
 /**
  * GET /account/unlink/:provider
- * Unlink OAuth provider.
  */
 exports.getOauthUnlink = function(req, res, next) {
   var provider = req.params.provider;
@@ -236,7 +216,6 @@ exports.getOauthUnlink = function(req, res, next) {
 
 /**
  * GET /reset/:token
- * Reset Password page.
  */
 exports.getReset = function(req, res) {
   if (req.isAuthenticated()) {
@@ -379,8 +358,8 @@ exports.postForgot = function(req, res, next) {
       });
       var mailOptions = {
         to: user.email,
-        from: 'hackathon@starter.com',
-        subject: 'Reset your password on Hackathon Starter',
+        from: 'support@contractsio.com',
+        subject: 'Reset your password on contracts',
         text: 'You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n' +
           'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
           'http://' + req.headers.host + '/reset/' + token + '\n\n' +

@@ -36,7 +36,7 @@ exports.getTransactions = function(req, res) {
     if (err) return error.send(req, res, err, '/transaction');
     return res.render('transaction/index', {
       title: 'Transactions',
-      transactions: results[0].concat(results[1]);
+      transactions: results[0].concat(results[1])
     });
   });
 };

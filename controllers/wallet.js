@@ -7,7 +7,6 @@ var auth = require('../config/auth');
 
 /**
  * GET /wallet
- * wallets page.
  */
 exports.getWallets = function(req, res) {
   if (!req.user) return res.redirect('/');
@@ -27,7 +26,6 @@ exports.getWallets = function(req, res) {
 
 /**
  * GET /wallet/:id
- * wallet page.
  */
 exports.getWallet = function(req, res) {
   Wallet.findOne({_id: req.params.id, '_owner': req.user._id }).populate('transactions').exec(function(err, wallet) {
@@ -46,7 +44,6 @@ exports.getWallet = function(req, res) {
 
 /**
  * POST /wallet
- * Create a new wallet.
  */
 exports.postWallet = function(req, res, next) {
   var publicKey = auth.generatePublicKey();

@@ -10,17 +10,21 @@ var error = require('../config/error');
  * GET /notification
  */
 exports.getNotifications = function(req, res) {
+  if (!auth.isLoggedIn(req)) {
+    return res.render('notification/index', {
+      title: 'Notifications',
+      notifications: []
+    });
+  }
+
   Notification.find({receiver: req.user._id}).populate('receiver sender transaction').exec(function(err, receiverNotifications) {
     Notification.find({sender: req.user._id}).populate('receiver sender transaction').exec(function(err, senderNotifications) {
-
       if (err) return error.send(req, res, err, '/');
       console.log(receiverNotifications, senderNotifications);
-
       return res.render('notification/index', {
         title: 'Notifications',
-        notifications: receiverNotifications.join(senderNotifications)
+        notifications: receiverNotifications.concat(senderNotifications)
       });
-
     });
   });
 };

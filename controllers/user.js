@@ -33,8 +33,11 @@ exports.postLogin = function(req, res, next) {
 
   passport.authenticate('local', function(err, user, info) {
     if (err) return next(err);
-    if (!user) return error.send(req, res, info.message, '/login');
-    if (user.pin !== req.body.in) return error.send(req, res, 'Invalid pin entry', '/');
+    if (!user) return next(info.message);
+    if (user.pin.toString() !== req.body.pin)  {
+      req.flash({'errors': { msg: 'invalid pin!!!'} });
+      return res.redirect('/login');
+    }
 
     req.logIn(user, function(err) {
       if (err) return next(err);

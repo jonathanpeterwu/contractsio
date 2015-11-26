@@ -30,7 +30,7 @@ exports.postVerification = function(req, res, next) {
 
     var errors = req.validationErrors();
     if (errors) return error.send(req, res, errors, '/login');
-    if (notification.receiver.pin !== req.body.ping) return error.send(req, res, 'Invalid pin', '/');
+    if (notification.receiver.pin.toString() !== req.body.ping) return error.send(req, res, 'Invalid pin', '/');
 
     async.parallel = ([
       function(callback) {

@@ -1,6 +1,6 @@
 {
   "name": "Contracts-API",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/jonathanapeterwu/conractsio.git"
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "async": "^1.5.0",
+    "authy": "^1.1.2",
     "bcrypt-nodejs": "^0.0.3",
     "bitcore": "^1.0.0",
     "bitcore-explorers": "^1.0.1",
@@ -24,6 +25,7 @@
     "connect-mongo": "^0.8.2",
     "cookie-parser": "^1.4.0",
     "csso": "^1.4.1",
+    "dotenv": "^1.2.0",
     "errorhandler": "^1.4.2",
     "ethereumjs-util": "^2.1.0",
     "express": "^4.13.3",

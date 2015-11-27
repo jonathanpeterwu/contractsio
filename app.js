@@ -42,6 +42,7 @@ var contactController = require('./controllers/contact');
  */
 var secrets = require('./config/secrets');
 var passportConf = require('./config/passport');
+var dotenv = require('dotenv').load();
 
 /**
  * Create Express server.
@@ -109,6 +110,8 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }))
 app.get('/', homeController.index);
 app.get('/login', userController.getLogin);
 app.post('/login', userController.postLogin);
+app.get('/authentication', userController.getAuthentication);
+app.post('/authentication', userController.postAuthentication);
 app.get('/logout', userController.logout);
 app.get('/forgot', userController.getForgot);
 app.post('/forgot', userController.postForgot);

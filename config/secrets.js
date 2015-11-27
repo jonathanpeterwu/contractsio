@@ -21,8 +21,10 @@
 
 module.exports = {
 
+  authyKey: 'sPDiTNJFMckRUlZMRU6V25TbhYRUQ1ZO',
+
   db: process.env.MONGODB || process.env.MONGOLAB_URI || 'mongodb://localhost:27017/test',
-  
+
   sessionSecret: process.env.SESSION_SECRET || 'Your Session Secret goes here',
 
   mailgun: {

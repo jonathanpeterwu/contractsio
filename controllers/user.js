@@ -3,14 +3,15 @@ var async = require('async');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var passport = require('passport');
+var speakeasy = require('speakeasy');
 var User = require('../models/User');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var error = require('../config/error');
+var authy = require('authy')(secrets.authyKey);
 
 /**
  * GET /login
- * Login page.
  */
 exports.getLogin = function(req, res) {
   if (req.user) return res.redirect('/');
@@ -21,7 +22,6 @@ exports.getLogin = function(req, res) {
 
 /**
  * POST /login
- * Sign in using email and password.
  */
 exports.postLogin = function(req, res, next) {
   req.assert('email', 'Email is not valid').isEmail();
@@ -38,14 +38,45 @@ exports.postLogin = function(req, res, next) {
       req.flash({'errors': { msg: 'invalid pin!!!'} });
       return res.redirect('/login');
     }
-
-    req.logIn(user, function(err) {
-      if (err) return next(err);
-      req.flash('success', { msg: 'Success! You are logged in.' });
-      return res.redirect('/');
-    });
+    return res.redirect('/authentication?email=' + user.email + '&number=' + user.number);
   })(req, res, next);
 };
+
+/**
+ * GET /authentication
+ */
+exports.getAuthentication = function(req, res) {
+  authy.register_user(req.query.email, req.query.number, function (err, authyRes) {
+    console.log(err, authyRes);
+    res.render('account/authentication', {
+      title: 'Authentication',
+      authyId: authyRes.user.id
+    });
+  });
+};
+
+/**
+ * POST /authentication
+ */
+exports.postAuthentication = function(req, res, next) {
+  authy.verify(req.body.authyId, req.body.code, function (err, res) {
+    if (!res.success) {
+      req.flash({'errors': { msg: res.message} });
+      res.render('account/authentication', {
+        title: 'Authentication',
+        authyId: authyRes.user.id
+      });
+    }
+    if (res.success) {
+      console.log(res);
+      req.logIn(user, function(err) {
+        req.flash('success', { msg: 'Success! You are logged in.' });
+        res.redirect('/');
+      });
+    }
+  });
+};
+
 
 /**
  * GET /logout
@@ -73,9 +104,9 @@ exports.postSignup = function(req, res, next) {
   req.assert('password', 'Password must be at least 8 characters long').len(8);
   req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
   req.assert('pin', 'Pin must be at least 4 characters long').len(4);
+  req.assert('number', 'Phone number must be at least 10 characters long').len(10);
 
   var errors = req.validationErrors();
-
   if (errors) {
     req.flash('errors', errors);
     return res.redirect('/signup');
@@ -89,7 +120,8 @@ exports.postSignup = function(req, res, next) {
   var user = new User({
     email: req.body.email,
     password: req.body.password,
-    pin: req.body.pin
+    pin: req.body.pin,
+    number: req.body.number
   });
 
   User.findOne({ email: req.body.email }, function(err, existingUser) {
@@ -114,17 +146,12 @@ exports.postSignup = function(req, res, next) {
         }
       }, function(err, wallet) {
         if (err) return next(err);
-
         user.wallets.push(wallet._id);
         user.save(function(err) {
           if (err) return next(err);
-          req.logIn(user, function(err) {
-            if (err) return next(err);
-            res.redirect('/');
-          });
+          return res.redirect('/authentication');
         });
       });
-
     });
   });
 };

@@ -3,18 +3,11 @@ var crypto = require('crypto');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-// User.sync({force: true}).then(function () {
-//   // Table created
-//   return User.create({
-//     firstName: 'John',
-//     lastName: 'Hancock'
-//   });
-// });
-
 var userSchema = new mongoose.Schema({
   email: { type: String, unique: true, lowercase: true },
   password: String,
   pin: { type: Number, minlength: 4, required: true },
+  number: { type: Number, required: true},
 
   facebook: String,
   twitter: String,

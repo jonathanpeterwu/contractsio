@@ -1,0 +1,17 @@
+extends ../layout
+
+block content
+  .page-header
+    h3 Authentication
+  form.form-horizontal(id='signup-form', method='POST')
+    input(type='hidden', name='_csrf', value=_csrf)
+    input(type='hidden', name='authyId', value=authyId)
+    .form-group
+      label.col-sm-3.control-label(for='code') Authy Code
+      .col-sm-7
+        input.form-control(type='number', name='code', id='code')
+    .form-group
+      .col-sm-offset-3.col-sm-7
+        button.btn.btn-success(type='submit')
+          i.fa.fa-password
+          | Submit

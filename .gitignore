@@ -7,11 +7,13 @@ lib-cov
 *.pid
 *.gz
 *.swp
+*.env
 
 pids
 logs
 results
 tmp
+secrets.js
 
 # Dependency directory
 node_modules

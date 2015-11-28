@@ -7,7 +7,6 @@ var speakeasy = require('speakeasy');
 var User = require('../models/User');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
-var error = require('../config/error');
 var authy = require('authy')(secrets.authyKey);
 
 /**
@@ -15,7 +14,7 @@ var authy = require('authy')(secrets.authyKey);
  */
 exports.getLogin = function(req, res) {
   if (req.user) return res.redirect('/');
-  res.render('account/login', {
+  return res.render('account/login', {
     title: 'Login'
   });
 };
@@ -29,7 +28,10 @@ exports.postLogin = function(req, res, next) {
   req.assert('pin', 'Pin cannot be blank').notEmpty();
 
   var errors = req.validationErrors();
-  if (errors) return error.send(req, res, errors, '/login');
+  if (errors) {
+    req.flash({'errors': { msg: errors} });
+    return res.redirect('/login');
+  }
 
   passport.authenticate('local', function(err, user, info) {
     if (err) return next(err);
@@ -47,7 +49,6 @@ exports.postLogin = function(req, res, next) {
  */
 exports.getAuthentication = function(req, res) {
   authy.register_user(req.query.email, req.query.number, function (err, authyRes) {
-    console.log(err, authyRes);
     res.render('account/authentication', {
       title: 'Authentication',
       authyId: authyRes.user.id
@@ -68,7 +69,6 @@ exports.postAuthentication = function(req, res, next) {
       });
     }
     if (res.success) {
-      console.log(res);
       req.logIn(user, function(err) {
         req.flash('success', { msg: 'Success! You are logged in.' });
         res.redirect('/');
@@ -111,7 +111,6 @@ exports.postSignup = function(req, res, next) {
     req.flash('errors', errors);
     return res.redirect('/signup');
   }
-
   if (req.body.pin === '0000' || req.body.pin === '1234' ) {
     req.flash('errors', { msg: 'Please use a stronger pin' });
     return res.redirect('/signup');
@@ -132,7 +131,10 @@ exports.postSignup = function(req, res, next) {
     user.save(function(err) {
       if (err) return next(err);
 
-      // Create ethereum  account - store keys privately
+      // TODO: create user wallet
+      // create and store ethereum account || bitcoin account
+      // display to user private keys or not;
+
       // Create wallet
       Wallet.create({
         _owner: user._id,
@@ -171,12 +173,12 @@ exports.getAccount = function(req, res) {
 exports.postUpdateProfile = function(req, res, next) {
   User.findById(req.user.id, function(err, user) {
     if (err) return next(err);
-    user.email = req.body.email || '';
-    user.profile.name = req.body.name || '';
-    user.profile.gender = req.body.gender || '';
-    user.profile.location = req.body.location || '';
-    user.profile.website = req.body.website || '';
-    user.profile.number = req.body.number || '';
+    user.email = req.body.email;
+    user.profile.name = req.body.name;
+    user.profile.gender = req.body.gender;
+    user.profile.location = req.body.location;
+    user.profile.website = req.body.website;
+    user.profile.number = req.body.number;
 
     user.save(function(err) {
       if (err) return next(err);
@@ -194,7 +196,6 @@ exports.postUpdatePassword = function(req, res, next) {
   req.assert('confirmPassword', 'Passwords do not match').equals(req.body.password);
 
   var errors = req.validationErrors();
-
   if (errors) {
     req.flash('errors', errors);
     return res.redirect('/account');
@@ -204,7 +205,6 @@ exports.postUpdatePassword = function(req, res, next) {
     if (err) return next(err);
 
     user.password = req.body.password;
-
     user.save(function(err) {
       if (err) return next(err);
       req.flash('success', { msg: 'Password has been changed.' });
@@ -274,7 +274,6 @@ exports.postReset = function(req, res, next) {
   req.assert('confirm', 'Passwords must match.').equals(req.body.password);
 
   var errors = req.validationErrors();
-
   if (errors) {
     req.flash('errors', errors);
     return res.redirect('back');
@@ -313,8 +312,8 @@ exports.postReset = function(req, res, next) {
       });
       var mailOptions = {
         to: user.email,
-        from: 'hackathon@starter.com',
-        subject: 'Your Hackathon Starter password has been changed',
+        from: 'support@contracts.io',
+        subject: 'Your Contracts password has been changed',
         text: 'Hello,\n\n' +
           'This is a confirmation that the password for your account ' + user.email + ' has just been changed.\n'
       };
@@ -331,7 +330,6 @@ exports.postReset = function(req, res, next) {
 
 /**
  * GET /forgot
- * Forgot Password page.
  */
 exports.getForgot = function(req, res) {
   if (req.isAuthenticated()) {
@@ -344,13 +342,11 @@ exports.getForgot = function(req, res) {
 
 /**
  * POST /forgot
- * Create a random token, then the send user an email with a reset link.
  */
 exports.postForgot = function(req, res, next) {
   req.assert('email', 'Please enter a valid email address.').isEmail();
 
   var errors = req.validationErrors();
-
   if (errors) {
     req.flash('errors', errors);
     return res.redirect('/forgot');

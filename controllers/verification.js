@@ -5,16 +5,17 @@ var Notification = require('../models/Notification');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
-var error = require('../config/error');
 
 /**
  * GET /verification/:id
  */
 exports.getVerifications = function(req, res, next) {
   Notification.findOne({_id: req.params.id }).populate('transactions sender receiver').exec(function(err, notification) {
-    if (err) return error.send(req, res, err, '/');
-    console.log(notification);
-    return res.render('verification/signature', {
+    if (err || !notification) {
+      req.flash('errors', {err: err});
+      return res.redirect('/');
+    }
+    res.render('verification/signature', {
       title: 'Signature',
       notification: notification
     });
@@ -29,9 +30,10 @@ exports.postVerification = function(req, res, next) {
     req.assert('pin', 'Pin cannot be blank').notEmpty();
 
     var errors = req.validationErrors();
-    if (errors) return error.send(req, res, errors, '/login');
-    if (notification.receiver.pin.toString() !== req.body.ping) return error.send(req, res, 'Invalid pin', '/');
-
+    if (errors || notifiation.receiver.pin.toString() !== req.body.pin) {
+      req.flash('errors', {err: err});
+      return res.redirect('/');
+    }
     async.parallel = ([
       function(callback) {
         Wallet.findOne({'_owner': notification.sender._id}, function(err, senderWallet) {
@@ -49,9 +51,6 @@ exports.postVerification = function(req, res, next) {
 
       // TODO: do something with requests/sends
       if (notification.transaction.type === 'request') {
-
-      }
-      if (notification.transaction.type === 'send') {
 
       }
 

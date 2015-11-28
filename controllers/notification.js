@@ -4,7 +4,6 @@ var crypto = require('crypto');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
-var error = require('../config/error');
 
 /**
  * GET /notification
@@ -17,15 +16,32 @@ exports.getNotifications = function(req, res) {
     });
   }
 
-  Notification.find({receiver: req.user._id}).populate('receiver sender transaction').exec(function(err, receiverNotifications) {
-    Notification.find({sender: req.user._id}).populate('receiver sender transaction').exec(function(err, senderNotifications) {
-      if (err) return error.send(req, res, err, '/');
-      console.log(receiverNotifications, senderNotifications);
-      return res.render('notification/index', {
+  async.parallel = ([
+    function(callback) {
+      Notification
+        .find({receiver: req.user._id})
+        .populate('receiver sender transaction')
+        .exec(function(err, receiverNotifications) {
+          return callback(err, receiverNotifications);
+        });
+    },
+    function(callback) {
+      Notification
+        .find({sender: req.user._id})
+        .populate('receiver sender transaction')
+        .exec(function(err, senderNotifications) {
+          return callback(err, senderNotifications);
+        });
+    }
+  ], function(err, results) {
+      if (err) {
+        req.flash('errors', {err: err});
+        return res.redirect('/');
+      }
+      res.render('notification/index', {
         title: 'Notifications',
-        notifications: receiverNotifications.concat(senderNotifications)
+        notifications: results[0].concat(results[1])
       });
-    });
   });
 };
 
@@ -33,16 +49,18 @@ exports.getNotifications = function(req, res) {
  * GET /notification/:id
  */
 exports.getNotification = function(req, res) {
-   Notification.findOne({_id: req.params.id, receiver: req.user._id}).populate('receiver sender transaction').exec(function(err, notification) {
-
-    if (err || !notification) return error.send(req, res, err, '/');
-    console.log(notification)
-
-    return res.render('notification/index', {
-      title: 'notification',
-      notifications: [notification],
-      needsSignature:  notification.rules.indexOf('multiSignature') !== -1
+   Notification
+    .findOne({_id: req.params.id, receiver: req.user._id})
+    .populate('receiver sender transaction')
+    .exec(function(err, notification) {
+      if (err) {
+        req.flash('errors', { err: err });
+        return res.redirect('/');
+      }
+      res.render('notification/index', {
+        title: 'notification',
+        notifications: [notification],
+        needsSignature:  notification.rules.indexOf('multiSignature') !== -1
+      });
     });
-
-  });
 };

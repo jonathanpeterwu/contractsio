@@ -10,7 +10,6 @@ var transporter = nodemailer.createTransport({
 
 /**
  * GET /contact
- * Contact form page.
  */
 exports.getContact = function(req, res) {
   res.render('contact', {
@@ -20,7 +19,6 @@ exports.getContact = function(req, res) {
 
 /**
  * POST /contact
- * Send a contact form via Nodemailer.
  */
 exports.postContact = function(req, res) {
   req.assert('name', 'Name cannot be blank').notEmpty();

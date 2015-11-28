@@ -6,7 +6,6 @@ var Wallet = require('../models/Wallet');
 var User = require('../models/User');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
-var error = require('../config/error');
 
 /**
  * GET /transaction
@@ -18,7 +17,6 @@ exports.getTransactions = function(req, res) {
       transactions: []
     });
   }
-
   async.parallel([
       function(callback){
         Transaction.find({sender: req.user._id}, function(err, transactions) {
@@ -33,8 +31,11 @@ exports.getTransactions = function(req, res) {
         });
      }
   ], function(err, results) {
-    if (err) return error.send(req, res, err, '/transaction');
-    return res.render('transaction/index', {
+    if (err) {
+      req.flash('errors', {err: err});
+      return res.redirect('/transcation');
+    }
+    res.render('transaction/index', {
       title: 'Transactions',
       transactions: results[0].concat(results[1])
     });
@@ -46,9 +47,11 @@ exports.getTransactions = function(req, res) {
  */
 exports.getTransaction = function(req, res) {
   Transaction.findOne({_id: req.body.id }, function(err, transaction) {
-    if (err) return error.send(req, res, err, '/');
-    console.log(transaction)
-    return res.render('transaction/index', {
+    if (err) {
+      req.flash('errors', {err: err});
+      return res.redirect('/');
+    }
+    res.render('transaction/index', {
       title: 'Transaction',
       transactions: [transaction]
     });
@@ -61,9 +64,11 @@ exports.getTransaction = function(req, res) {
 */
 exports.createTransaction = function(req, res, next) {
   User.find({}, function(err, users) {
-    if (err) return error.send(req, res, err, '/');
-    console.log(users);
-    return res.render('transaction/new', {
+    if (err) {
+      req.flash('errors', {err: err});
+      return res.redirect('/');
+    }
+    res.render('transaction/new', {
       title: 'Transaction',
       users: users
     });
@@ -93,6 +98,11 @@ exports.postTransaction = function(req, res, next) {
     }
   ],
   function(err, results){
+    if (err) {
+      req.flash('errors', { err: err });
+      return res.redirect('/');
+    }
+
     var requestUser = results[0];
     var currentUser = results[1];
     var requestWallet = requestUser.wallets[0];
@@ -155,37 +165,46 @@ exports.postTransaction = function(req, res, next) {
       if (requestWallet.balance < req.body.value) return next('Not enough money!!');
       transaction.sender = currentUser._id;
       transaction.receiver = requestUser._id;
-      currentWallet.balance -= req.body.value;
-      requestWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value);
-      transaction.status = 'completed';
+      if (wait) {
+        currentWallet.balance -= req.body.value;
+        requestWallet.balance = parseInt(requestWallet.balance) + parseInt(req.body.value);
+        transaction.status = 'completed';
+      }
     }
 
-    console.log(transaction, currentWallet, requestWallet)
-
-    transaction.save(function(err) {
-      if (err) return next(err);
-      currentWallet.save(function(err) {
-        if (err) return next(err);
-        requestWallet.save(function(err){
-          if (err) return next(err);
-
-          // Create Notification
-          if (transaction.status === 'pending') {
-            Notification.create({
-              sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,
-              receiver: req.body.type === 'request' ?  currentUser._id : requestUser._id,
-              transaction: transaction._id,
-              rules: rules
-            }, function(err, notification) {
-              if (err) return next(err);
-              console.log(notification);
-              res.redirect('/transaction');
-            });
-          } else {
-            res.redirect('/transaction');
-          }
+    async.parallel = ([
+      function(callback) {
+        if (transaction.status !== 'pending') return callback(null, null);
+        Notification.create({
+          sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,
+          receiver: req.body.type === 'request' ?  currentUser._id : requestUser._id,
+          transaction: transaction._id,
+          rules: rules
+        }, function(err, notification) {
+          return callback(err, notification);
         });
-      });
+      },
+      function(callback) {
+        transaction.save(function(err) {
+          return callback(err, null);
+        });
+      },
+      function(callback) {
+        currentWallet.save(function(err) {
+          return callback(err, null);
+        });
+      },
+      function(callback) {
+        requestWallet.save(function(err){
+          return callback(err, null);
+        });
+      }
+    ], function(err, results) {
+      if (err) {
+        req.flash('errors', { err: err});
+        return res.redirect('/transaction/new');
+      }
+      return res.redirect('/transaction');
     });
   });
 };
@@ -201,7 +220,6 @@ exports.updateTransaction = function(req, res, next) {
     transaction.receiver = req.body.receiver || transaction.receiver;
     transaction.value = req.body.value || transaction.vaue;
     transaction.currency = req.body.currency || transaction.currency;
-
     transaction.rules.multiSignature = req.body.multiSignature || transaction.receiver;
     transaction.rules.packageConfirmation = req.body.packageConfirmation;
     transaction.rules.fileUpload = req.body.fileUpload;

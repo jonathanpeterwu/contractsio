@@ -8,6 +8,7 @@ var userSchema = new mongoose.Schema({
   password: String,
   pin: { type: Number, minlength: 4, required: true },
   number: { type: Number, required: true},
+  authyId: { type: Number},
 
   facebook: String,
   twitter: String,

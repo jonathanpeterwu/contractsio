@@ -47,12 +47,37 @@ exports.postLogin = function(req, res, next) {
 /**
  * GET /authentication
  */
-exports.getAuthentication = function(req, res) {
-  authy.register_user(req.query.email, req.query.number, function (err, authyRes) {
-    res.render('account/authentication', {
-      title: 'Authentication',
-      authyId: authyRes.user.id
-    });
+exports.getAuthentication = function(req, res, next) {
+  User.findOne({email: req.query.email}, function(err, user) {
+    if (err) return next(err);
+    if (user.authyId) {
+      authy.request_sms(user.authyId, true, function (err, authyRes) {
+        console.log(authyRes);
+        res.render('account/authentication', {
+          title: 'Authentication',
+          authyId: user.authyId
+        });
+      });
+    }
+    if (!user.authyId) {
+      authy.register_user(req.query.email, req.query.number, function (err, authyRes) {
+        if (err) console.log(err);
+        if (authyRes) {
+          user.authyId = authyRes.user.id;
+          user.save(function(err) {
+            if (err) return next(err);
+            authy.request_sms(user.authyId, true, function (err, authyRes) {
+              console.log(authyRes);
+              res.render('account/authentication', {
+                title: 'Authentication',
+                authyId: authyRes.user.id,
+                userId: user._id
+              });
+            });
+          });
+        }
+      });
+    }
   });
 };
 
@@ -60,19 +85,25 @@ exports.getAuthentication = function(req, res) {
  * POST /authentication
  */
 exports.postAuthentication = function(req, res, next) {
-  authy.verify(req.body.authyId, req.body.code, function (err, res) {
-    if (!res.success) {
-      req.flash({'errors': { msg: res.message} });
-      res.render('account/authentication', {
-        title: 'Authentication',
-        authyId: authyRes.user.id
-      });
-    }
-    if (res.success) {
-      req.logIn(user, function(err) {
-        req.flash('success', { msg: 'Success! You are logged in.' });
-        res.redirect('/');
-      });
+  authy.verify(req.body.authyId, req.body.code, function (err, authyRes) {
+    if (err) { console.log(err) }
+    if (!err) {
+      if (!authyRes.success) {
+        req.flash({'errors': { msg: authyRes.message} });
+        res.render('account/authentication', {
+          title: 'Authentication',
+          authyId: authyRes.user.id
+        });
+      }
+      if (authyRes.success) {
+        User.findOne({id: req.body.userId}, function(err, user) {
+          if (err) console.log(err);
+          req.logIn(user, function(err) {
+            req.flash('success', { msg: 'Success! You are logged in.' });
+            res.redirect('/');
+          });
+        });
+      }
     }
   });
 };

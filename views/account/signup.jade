@@ -6,6 +6,8 @@ block content
   form.form-horizontal(id='signup-form', method='POST')
     input(type='hidden', name='_csrf', value=_csrf)
     .form-group
+      select(id='authy-countries')
+    .form-group
       label.col-sm-3.control-label(for='email') Email
       .col-sm-7
         input.form-control(type='email', name='email', id='email', placeholder='Email', autofocus)
@@ -22,7 +24,7 @@ block content
       .col-sm-7
         input.form-control(type='password', name='pin', id='pin', placeholder='0000')
     .form-group
-      label.col-sm-3.control-label(for='number') Phone Number (Two-Factor Authentication)
+      label.col-sm-3.control-label(for='number') Phone Number
       .col-sm-7
         input.form-control(type='number', name='number', id='number', placeholder='1234567890')
     .form-group

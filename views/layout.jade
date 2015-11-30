@@ -7,6 +7,8 @@ html
     meta(name='csrf-token', content=_csrf)
     title #{title} - ContractsIO Api
     link(rel='stylesheet', href='/css/main.css')
+    link(rel='stylesheet', href='https://www.authy.com/form.authy.min.css')
+
   body
     include partials/header
 
@@ -19,6 +21,7 @@ html
     script(src='/js/lib/jquery.min.js')
     script(src='/js/lib/bootstrap.min.js')
     script(src='/js/main.js')
+    script(src='https://www.authy.com/form.authy.min.js')
 
     // Google Analytics: change UA-XXXXX-X to be your site's ID
     script.

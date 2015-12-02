@@ -6,8 +6,6 @@ block content
   form.form-horizontal(id='signup-form', method='POST')
     input(type='hidden', name='_csrf', value=_csrf)
     .form-group
-      select(id='authy-countries')
-    .form-group
       label.col-sm-3.control-label(for='email') Email
       .col-sm-7
         input.form-control(type='email', name='email', id='email', placeholder='Email', autofocus)

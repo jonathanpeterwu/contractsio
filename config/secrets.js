@@ -21,6 +21,11 @@
 
 module.exports = {
 
+  twilioDev: {
+    sid: 'ACcfc6049c7f993801b1da125d2f08a9f3',
+    token: 'b32c2a4716cf3e3107b8da84c2fc0021'
+  },
+
   authyKey: 'sPDiTNJFMckRUlZMRU6V25TbhYRUQ1ZO',
 
   db: process.env.MONGODB || process.env.MONGOLAB_URI || 'mongodb://localhost:27017/test',

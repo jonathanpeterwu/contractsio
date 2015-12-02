@@ -5,6 +5,7 @@ var Notification = require('../models/Notification');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
+var client = require('twilio')(secrets.twilioDev.sid, secrets.twilioDev.token);
 
 /**
  * GET /verification/:id
@@ -83,6 +84,17 @@ exports.postVerification = function(req, res, next) {
         }
       ], function(err, results) {
         if (err) return error.send(req, res, err, '/');
+        if (!err) {
+          client.sendMessage({
+              to: '+1' + notification.receiver.number, // Any number Twilio can deliver to
+              from: '+14506667788', // A number you bought from Twilio and can use for outbound communication
+              body: 'Verification is completed' // body of the SMS message
+          }, function(err, responseData) {
+              if (!err) {
+                console.log(responseData);
+              }
+          });
+        }
         return res.redirect('/notification/' + notification._id);
       });
     });

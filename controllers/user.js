@@ -8,7 +8,6 @@ var User = require('../models/User');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var authy = require('authy')(secrets.authyKey);
-
 /**
  * GET /login
  */
@@ -50,7 +49,7 @@ exports.postLogin = function(req, res, next) {
 exports.getAuthentication = function(req, res, next) {
   User.findOne({email: req.query.email}, function(err, user) {
     if (err) return next(err);
-    if (user.authyId) {
+    if (user && user.authyId) {
       authy.request_sms(user.authyId, true, function (err, authyRes) {
         console.log(authyRes);
         res.render('account/authentication', {
@@ -59,7 +58,7 @@ exports.getAuthentication = function(req, res, next) {
         });
       });
     }
-    if (!user.authyId) {
+    if (user && !user.authyId) {
       authy.register_user(req.query.email, req.query.number, function (err, authyRes) {
         if (err) console.log(err);
         if (authyRes) {
@@ -88,16 +87,18 @@ exports.postAuthentication = function(req, res, next) {
   authy.verify(req.body.authyId, req.body.code, function (err, authyRes) {
     if (err) { console.log(err) }
     if (!err) {
-      if (!authyRes.success) {
-        req.flash({'errors': { msg: authyRes.message} });
+      if (authyRes.errors && authyRes.errors.message) {
+        req.flash({'errors': { msg: authyRes.errors.message} });
         res.render('account/authentication', {
           title: 'Authentication',
           authyId: authyRes.user.id
         });
       }
+      console.log(req.query.email);
       if (authyRes.success) {
-        User.findOne({id: req.body.userId}, function(err, user) {
+        User.findOne({email: req.query.email}, function(err, user) {
           if (err) console.log(err);
+          console.log(user)
           req.logIn(user, function(err) {
             req.flash('success', { msg: 'Success! You are logged in.' });
             res.redirect('/');

@@ -1,5 +1,13 @@
 var Immutable = require("immutable"),
     transit   = require("transit-js");
+var Transaction = require('../models/Transaction');
+
+console.log(Transaction)
+Transaction.find({sender: '565f28b264458be436bc54a4'}, function(err, transactions) {
+  console.log(transactions, err)
+});
+
+return;
 
 var reader = transit.reader("json", {
     arrayBuilder: {

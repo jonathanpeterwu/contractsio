@@ -11,12 +11,7 @@ var secrets = require('../config/secrets');
  * GET /transaction
  */
 exports.getTransactions = function(req, res) {
-  if (!req.user) {
-    return res.render('transaction/index', {
-      title: 'Transactions',
-      transactions: []
-    });
-  }
+  console.log(req.user._id)
   async.parallel([
       function(callback){
         Transaction.find({sender: req.user._id}, function(err, transactions) {
@@ -31,6 +26,7 @@ exports.getTransactions = function(req, res) {
         });
      }
   ], function(err, results) {
+    console.log(results)
     if (err) {
       req.flash('errors', {err: err});
       return res.redirect('/transcation');
@@ -80,9 +76,6 @@ exports.createTransaction = function(req, res, next) {
  * POST /transaction
  */
 exports.postTransaction = function(req, res, next) {
-  if (!req.session.id) return next('User is not logged in');
-  if (!req.user._id)  return next('User is not logged in');
-
   async.parallel([
     function(callback){
       User.findOne({email: req.body.email}).populate('wallets').exec(function(err, requestUser) {
@@ -102,7 +95,6 @@ exports.postTransaction = function(req, res, next) {
       req.flash('errors', { err: err });
       return res.redirect('/');
     }
-
     var requestUser = results[0];
     var currentUser = results[1];
     var requestWallet = requestUser.wallets[0];
@@ -172,39 +164,26 @@ exports.postTransaction = function(req, res, next) {
       }
     }
 
-    async.parallel = ([
-      function(callback) {
-        if (transaction.status !== 'pending') return callback(null, null);
-        Notification.create({
-          sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,
-          receiver: req.body.type === 'request' ?  currentUser._id : requestUser._id,
-          transaction: transaction._id,
-          rules: rules
-        }, function(err, notification) {
-          return callback(err, notification);
-        });
-      },
-      function(callback) {
-        transaction.save(function(err) {
-          return callback(err, null);
-        });
-      },
-      function(callback) {
-        currentWallet.save(function(err) {
-          return callback(err, null);
-        });
-      },
-      function(callback) {
+    transaction.save(function(err) {
+      if (err) next(err);
+      currentWallet.save(function(err) {
+        if (err) next(err);
         requestWallet.save(function(err){
-          return callback(err, null);
+          if (err) next(err);
+          if (transaction.status === 'pending') {
+            Notification.create({
+              sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,
+              receiver: req.body.type === 'request' ?  currentUser._id : requestUser._id,
+              transaction: transaction._id,
+              rules: rules
+            }, function(err, notification) {
+              return res.redirect('/transaction');
+            });
+          } else {
+            return res.redirect('/transaction');
+          }
         });
-      }
-    ], function(err, results) {
-      if (err) {
-        req.flash('errors', { err: err});
-        return res.redirect('/transaction/new');
-      }
-      return res.redirect('/transaction');
+      });
     });
   });
 };

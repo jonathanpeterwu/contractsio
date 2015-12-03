@@ -9,26 +9,21 @@ var auth = require('../config/auth');
  * GET /wallet
  */
 exports.getWallets = function(req, res) {
-  async.parallel = ([
-    function(callback) {
-      Wallet.findOne({'_owner': req.user._id}).populate('transactions').exec(function(err, wallet) {
-        return callback(err, wallet);
-      });
-    },
-    function(callback) {
-      Wallet.find({}).populate('_owner transactions').exec(function(err, wallets) {
-        return callback(err, wallets);
-      });
-    }
-  ], function(err, results) {
+  Wallet.findOne({'_owner': req.user._id}).populate('transactions').exec(function(err, wallet) {
     if (err) {
       req.flash('errors',{ err: err});
       return res.redirect('/');
     }
-    res.render('wallet/index', {
-      title: 'wallets',
-      wallet: results[0],
-      wallets: results[1]
+    Wallet.find({}).populate('_owner transactions').exec(function(err, wallets) {
+      if (err) {
+        req.flash('errors',{ err: err});
+        return res.redirect('/');
+      }
+      res.render('wallet/index', {
+        title: 'wallets',
+        wallet: wallet,
+        wallets: wallets
+      });
     });
   });
 };

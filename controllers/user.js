@@ -32,6 +32,7 @@ exports.postLogin = function(req, res, next) {
     return res.redirect('/login');
   }
 
+
   passport.authenticate('local', function(err, user, info) {
     if (err) return next(err);
     if (!user) return next(info.message);
@@ -39,7 +40,10 @@ exports.postLogin = function(req, res, next) {
       req.flash({'errors': { msg: 'invalid pin!!!'} });
       return res.redirect('/login');
     }
-    return res.redirect('/authentication?email=' + user.email + '&number=' + user.number);
+    req.logIn(user, function(err) {
+      req.flash('success', { msg: 'Success! You are logged in.' });
+      return res.redirect('/authentication?email='+user.email+'&number='+user.number);
+    });
   })(req, res, next);
 };
 
@@ -51,7 +55,6 @@ exports.getAuthentication = function(req, res, next) {
     if (err) return next(err);
     if (user && user.authyId) {
       authy.request_sms(user.authyId, true, function (err, authyRes) {
-        console.log(authyRes);
         res.render('account/authentication', {
           title: 'Authentication',
           authyId: user.authyId
@@ -66,7 +69,6 @@ exports.getAuthentication = function(req, res, next) {
           user.save(function(err) {
             if (err) return next(err);
             authy.request_sms(user.authyId, true, function (err, authyRes) {
-              console.log(authyRes);
               res.render('account/authentication', {
                 title: 'Authentication',
                 authyId: authyRes.user.id,
@@ -86,25 +88,16 @@ exports.getAuthentication = function(req, res, next) {
 exports.postAuthentication = function(req, res, next) {
   authy.verify(req.body.authyId, req.body.code, function (err, authyRes) {
     if (err) { console.log(err) }
-    if (!err) {
-      if (authyRes.errors && authyRes.errors.message) {
-        req.flash({'errors': { msg: authyRes.errors.message} });
-        res.render('account/authentication', {
-          title: 'Authentication',
-          authyId: authyRes.user.id
-        });
-      }
-      console.log(req.query.email);
-      if (authyRes.success) {
-        User.findOne({email: req.query.email}, function(err, user) {
-          if (err) console.log(err);
-          console.log(user)
-          req.logIn(user, function(err) {
-            req.flash('success', { msg: 'Success! You are logged in.' });
-            res.redirect('/');
-          });
-        });
-      }
+    if (authyRes.errors && authyRes.errors.message) {
+      req.flash({'errors': { msg: authyRes.errors.message} });
+      req.logout();
+      res.render('account/authentication', {
+        title: 'Authentication',
+        authyId: authyRes.user.id
+      });
+    }
+    if (authyRes.success) {
+      res.redirect('/');
     }
   });
 };

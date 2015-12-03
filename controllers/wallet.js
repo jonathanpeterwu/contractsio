@@ -9,7 +9,6 @@ var auth = require('../config/auth');
  * GET /wallet
  */
 exports.getWallets = function(req, res) {
-  if (!req.user) return res.redirect('/');
   async.parallel = ([
     function(callback) {
       Wallet.findOne({'_owner': req.user._id}).populate('transactions').exec(function(err, wallet) {

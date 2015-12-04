@@ -1,6 +1,19 @@
 var Immutable = require("immutable"),
     transit   = require("transit-js");
 var Transaction = require('../models/Transaction');
+var secrets = require('../config/secrets');
+var twilio = require('twilio');
+var client = new twilio.RestClient(secrets.twilioDev.sid, secrets.twilioDev.token);
+
+  client.messages.create({
+      body: 'Test',
+      to: "+18183379884",
+      from: "+18184854569"
+  }, function(err, message) {
+    console.log(err, message, 'Text sent');
+  });
+
+return;
 
 console.log(Transaction)
 Transaction.find({sender: '565f28b264458be436bc54a4'}, function(err, transactions) {

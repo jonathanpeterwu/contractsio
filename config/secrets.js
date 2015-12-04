@@ -21,6 +21,12 @@
 
 module.exports = {
 
+  twilio: {
+    sid: 'AC54e302f5b3bb68218cf975d65eabca8a',
+    token: 'ac3b1c8347a16a42768829ecf874a6da'
+  },
+
+
   twilioDev: {
     sid: 'ACcfc6049c7f993801b1da125d2f08a9f3',
     token: 'b32c2a4716cf3e3107b8da84c2fc0021'

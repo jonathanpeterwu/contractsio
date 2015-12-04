@@ -7,6 +7,7 @@ var speakeasy = require('speakeasy');
 var User = require('../models/User');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
+var messenger = require('../config/messenger');
 var authy = require('authy')(secrets.authyKey);
 /**
  * GET /login
@@ -87,8 +88,11 @@ exports.getAuthentication = function(req, res, next) {
  */
 exports.postAuthentication = function(req, res, next) {
   authy.verify(req.body.authyId, req.body.code, function (err, authyRes) {
-    if (err) { console.log(err) }
-    if (authyRes.errors && authyRes.errors.message) {
+    if (err || !authyRes) {
+      req.flash('errors', { msg: 'Failed to authenticate'})
+      return res.redirect('/authentication');
+    }
+    if (authyRes && authyRes.errors && authyRes.errors.message) {
       req.flash({'errors': { msg: authyRes.errors.message} });
       req.logout();
       res.render('account/authentication', {
@@ -96,7 +100,8 @@ exports.postAuthentication = function(req, res, next) {
         authyId: authyRes.user.id
       });
     }
-    if (authyRes.success) {
+    if (authyRes && authyRes.success) {
+      messenger.sendText(req.user.number, req.user.email + ' has been logged in')
       res.redirect('/');
     }
   });

@@ -5,7 +5,7 @@ var Notification = require('../models/Notification');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
-var client = require('twilio')(secrets.twilioDev.sid, secrets.twilioDev.token);
+var client = require('twilio')(secrets.twilio.sid, secrets.twilio.token);
 
 /**
  * GET /verification/:id

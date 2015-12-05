@@ -11,7 +11,6 @@ var secrets = require('../config/secrets');
  * GET /transaction
  */
 exports.getTransactions = function(req, res) {
-  console.log(req.user._id)
   async.parallel([
       function(callback){
         Transaction.find({sender: req.user._id}, function(err, transactions) {
@@ -26,7 +25,6 @@ exports.getTransactions = function(req, res) {
         });
      }
   ], function(err, results) {
-    console.log(results)
     if (err) {
       req.flash('errors', {err: err});
       return res.redirect('/transcation');
@@ -79,14 +77,12 @@ exports.postTransaction = function(req, res, next) {
   async.parallel([
     function(callback){
       User.findOne({email: req.body.email}).populate('wallets').exec(function(err, requestUser) {
-        if (!requestUser) requestUser = 'New requestUser';
-        callback(null, requestUser);
+        callback(err, requestUser);
       });
     },
     function(callback){
       User.findOne({email: req.user.email}).populate('wallets').exec(function(err, currentUser) {
-        if (!currentUser) currentUser = 'New currentUser';
-        callback(null, currentUser);
+        callback(err, currentUser);
       });
     }
   ],
@@ -112,6 +108,10 @@ exports.postTransaction = function(req, res, next) {
         escrowPeriod: req.body.escrowPeriod || false
       }
     });
+
+    // Send transaction completion
+    messenger.sendText(requestUser.number, 'Transaction has been created');
+    messenger.sendText(currentUser.number, 'Transaction has been created');
 
     // Add reference to user wallet
     currentWallet.transactions.push(transaction._id);
@@ -204,6 +204,9 @@ exports.updateTransaction = function(req, res, next) {
     transaction.rules.fileUpload = req.body.fileUpload;
     transaction.rules.thirdPartyAuthentication = req.body.thirdPartyAuthentication;
     transaction.rules.escrowPeriod = req.body.escrowPeriod;
+
+    // Send transaction completion
+    messenger.sendText(req.user.number, 'Transaction updated.');
 
     transaction.save(function(err) {
       if (err) return next(err);

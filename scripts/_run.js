@@ -5,13 +5,13 @@ var secrets = require('../config/secrets');
 var twilio = require('twilio');
 var client = new twilio.RestClient(secrets.twilioDev.sid, secrets.twilioDev.token);
 
-  client.messages.create({
-      body: 'Test',
-      to: "+18183379884",
-      from: "+18184854569"
-  }, function(err, message) {
-    console.log(err, message, 'Text sent');
-  });
+client.messages.create({
+    body: 'Test',
+    to: "+18183379884",
+    from: "+18184854569"
+}, function(err, message) {
+  console.log(err, message, 'Text sent');
+});
 
 return;
 

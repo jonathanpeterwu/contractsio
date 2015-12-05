@@ -112,6 +112,7 @@ exports.postAuthentication = function(req, res, next) {
  * GET /logout
  */
 exports.logout = function(req, res) {
+  messenger.sendText(req.user.number,'You have been logged out')
   req.logout();
   res.redirect('/');
 };
@@ -181,6 +182,7 @@ exports.postSignup = function(req, res, next) {
         user.wallets.push(wallet._id);
         user.save(function(err) {
           if (err) return next(err);
+          messenger.sendText(req.user.number,'Thanks for signing up!')
           return res.redirect('/authentication');
         });
       });

@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
+var messenger = require('../config/messenger');
 
 /**
  * GET /notification

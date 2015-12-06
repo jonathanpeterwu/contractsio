@@ -35,12 +35,15 @@ exports.postLogin = function(req, res, next) {
 
 
   passport.authenticate('local', function(err, user, info) {
-    if (err) return next(err);
-    if (!user) return next(info.message);
+    if (err | !user) {
+      req.flash({'errors': { msg: err} });
+      return res.redirect('/login');
+    }
     if (user.pin.toString() !== req.body.pin)  {
       req.flash({'errors': { msg: 'invalid pin!!!'} });
       return res.redirect('/login');
     }
+
     req.logIn(user, function(err) {
       req.flash('success', { msg: 'Success! You are logged in.' });
       return res.redirect('/authentication?email='+user.email+'&number='+user.number);

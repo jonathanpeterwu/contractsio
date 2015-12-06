@@ -6,6 +6,7 @@ var Wallet = require('../models/Wallet');
 var User = require('../models/User');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
+var messenger = require('../config/messenger');
 
 /**
  * GET /transaction

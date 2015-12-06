@@ -10,13 +10,6 @@ var messenger = require('../config/messenger');
  * GET /notification
  */
 exports.getNotifications = function(req, res) {
-  if (!auth.isLoggedIn(req)) {
-    return res.render('notification/index', {
-      title: 'Notifications',
-      notifications: []
-    });
-  }
-
   async.parallel = ([
     function(callback) {
       Notification

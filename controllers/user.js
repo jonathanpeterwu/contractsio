@@ -45,7 +45,7 @@ exports.postLogin = function(req, res, next) {
     }
 
     req.logIn(user, function(err) {
-      req.flash('success', { msg: 'Success! You are logged in.' });
+      req.flash('success', { msg: 'Success! Please authenticate your route' });
       return res.redirect('/authentication?email='+user.email+'&number='+user.number);
     });
   })(req, res, next);

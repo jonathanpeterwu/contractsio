@@ -10,32 +10,13 @@ var messenger = require('../config/messenger');
  * GET /notification
  */
 exports.getNotifications = function(req, res) {
-  async.parallel = ([
-    function(callback) {
-      Notification
-        .find({receiver: req.user._id})
-        .populate('receiver sender transaction')
-        .exec(function(err, receiverNotifications) {
-          return callback(err, receiverNotifications);
-        });
-    },
-    function(callback) {
-      Notification
-        .find({sender: req.user._id})
-        .populate('receiver sender transaction')
-        .exec(function(err, senderNotifications) {
-          return callback(err, senderNotifications);
-        });
-    }
-  ], function(err, results) {
-      if (err) {
-        req.flash('errors', {err: err});
-        return res.redirect('/');
-      }
+  Notification.find({receiver: req.user._id}).populate('receiver sender transaction').exec(function(err, receiverNotifications) {
+    Notification.find({sender: req.user._id}).populate('receiver sender transaction').exec(function(err, senderNotifications) {
       res.render('notification/index', {
         title: 'Notifications',
-        notifications: results[0].concat(results[1])
+        notifications: receiverNotifications.concat(senderNotifications)
       });
+    });
   });
 };
 
@@ -47,14 +28,14 @@ exports.getNotification = function(req, res) {
     .findOne({_id: req.params.id, receiver: req.user._id})
     .populate('receiver sender transaction')
     .exec(function(err, notification) {
-      if (err) {
+      if (err || !notification) {
         req.flash('errors', { err: err });
         return res.redirect('/');
       }
       res.render('notification/index', {
         title: 'notification',
         notifications: [notification],
-        needsSignature:  notification.rules.indexOf('multiSignature') !== -1
+        needsSignature:  notification && notification.rules ? notification.rules.indexOf('multiSignature') !== -1 : false
       });
     });
 };

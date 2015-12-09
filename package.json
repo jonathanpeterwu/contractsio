@@ -62,6 +62,7 @@
     "paypal-rest-sdk": "^1.6.3",
     "request": "^2.65.0",
     "rethinkdb": "^2.1.1",
+    "rollbar": "^0.5.10",
     "serve-favicon": "^2.3.0",
     "speakeasy": "^1.0.3",
     "stripe": "^4.0.0",

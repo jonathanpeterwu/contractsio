@@ -9,6 +9,8 @@ var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var messenger = require('../config/messenger');
 var authy = require('authy')(secrets.authyKey);
+var rollbar = require("rollbar").init('61a5122752af4eee9fee01e1b7070708');
+
 /**
  * GET /login
  */
@@ -29,13 +31,14 @@ exports.postLogin = function(req, res, next) {
 
   var errors = req.validationErrors();
   if (errors) {
+    Rollbar.error("Something went wrong POST /login", errors);
     req.flash({'errors': { msg: errors} });
     return res.redirect('/login');
   }
 
-
   passport.authenticate('local', function(err, user, info) {
     if (err | !user) {
+      Rollbar.error("Something went wrong POST /login authentication", err);
       req.flash({'errors': { msg: err} });
       return res.redirect('/login');
     }
@@ -56,7 +59,10 @@ exports.postLogin = function(req, res, next) {
  */
 exports.getAuthentication = function(req, res, next) {
   User.findOne({email: req.query.email}, function(err, user) {
-    if (err) return next(err);
+    if (err) {
+      Rollbar.error("Something went wrong GET /authentication authentication", err)
+      next(err)
+    }
     if (user && user.authyId) {
       authy.request_sms(user.authyId, true, function (err, authyRes) {
         res.render('account/authentication', {
@@ -67,7 +73,9 @@ exports.getAuthentication = function(req, res, next) {
     }
     if (user && !user.authyId) {
       authy.register_user(req.query.email, req.query.number, function (err, authyRes) {
-        if (err) console.log(err);
+        if (err) {
+          Rollbar.error("Authy login authetication error", err)
+        }
         if (authyRes) {
           user.authyId = authyRes.user.id;
           user.save(function(err) {
@@ -92,10 +100,13 @@ exports.getAuthentication = function(req, res, next) {
 exports.postAuthentication = function(req, res, next) {
   authy.verify(req.body.authyId, req.body.code, function (err, authyRes) {
     if (err || !authyRes) {
+      Rollbar.error("Authy login authetication error", 'Failed to authenticate')
       req.flash('errors', { msg: 'Failed to authenticate'})
-      return res.redirect('/authentication');
+      req.logout()
+      return res.redirect('/authentication')
     }
     if (authyRes && authyRes.errors && authyRes.errors.message) {
+      Rollbar.error("Authy erorr", authyRes.errors.message)
       req.flash({'errors': { msg: authyRes.errors.message} });
       req.logout();
       res.render('account/authentication', {
@@ -142,6 +153,7 @@ exports.postSignup = function(req, res, next) {
 
   var errors = req.validationErrors();
   if (errors) {
+    Rollbar.error('Signup error POST /signup', errors)
     req.flash('errors', errors);
     return res.redirect('/signup');
   }

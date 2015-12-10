@@ -7,6 +7,8 @@ var secrets = require('../config/secrets');
 var auth = require('../config/auth');
 var messenger = require('../config/messenger');
 var client = require('twilio')(secrets.twilio.sid, secrets.twilio.token);
+var errors = require('../config/secrets');
+var Rollbar = require("rollbar").init(secrets.rollbar.id);
 
 /**
  * GET /verification/:id

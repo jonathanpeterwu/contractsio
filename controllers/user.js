@@ -9,7 +9,8 @@ var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var messenger = require('../config/messenger');
 var authy = require('authy')(secrets.authyKey);
-var rollbar = require("rollbar").init('61a5122752af4eee9fee01e1b7070708');
+var Rollbar = require("rollbar").init(secrets.rollbar.id);
+var errors = require('../config/secrets');
 
 /**
  * GET /login

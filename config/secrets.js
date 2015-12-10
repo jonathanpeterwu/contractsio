@@ -26,6 +26,9 @@ module.exports = {
     token: 'ac3b1c8347a16a42768829ecf874a6da'
   },
 
+  rollbar {
+    id: '61a5122752af4eee9fee01e1b7070708'
+  },
 
   twilioDev: {
     sid: 'ACcfc6049c7f993801b1da125d2f08a9f3',

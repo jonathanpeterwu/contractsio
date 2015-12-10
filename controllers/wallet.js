@@ -4,6 +4,8 @@ var crypto = require('crypto');
 var Wallet = require('../models/Wallet');
 var secrets = require('../config/secrets');
 var auth = require('../config/auth');
+var errors = require('../config/secrets');
+var Rollbar = require("rollbar").init(secrets.rollbar.id);
 
 /**
  * GET /wallet

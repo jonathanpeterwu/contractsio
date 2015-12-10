@@ -7,6 +7,8 @@ var User = require('../models/User');
 var Notification = require('../models/Notification');
 var secrets = require('../config/secrets');
 var messenger = require('../config/messenger');
+var Rollbar = require("rollbar").init(secrets.rollbar.id);
+var errors = require('../config/secrets');
 
 /**
  * GET /transaction
@@ -27,6 +29,7 @@ exports.getTransactions = function(req, res) {
      }
   ], function(err, results) {
     if (err) {
+      Rollbar.error("Something went wrong get /transaction route", err);
       req.flash('errors', {err: err});
       return res.redirect('/transcation');
     }
@@ -43,6 +46,7 @@ exports.getTransactions = function(req, res) {
 exports.getTransaction = function(req, res) {
   Transaction.findOne({_id: req.body.id }, function(err, transaction) {
     if (err) {
+      Rollbar.error("Something went wrong get /transaction route", err);
       req.flash('errors', {err: err});
       return res.redirect('/');
     }
@@ -60,6 +64,7 @@ exports.getTransaction = function(req, res) {
 exports.createTransaction = function(req, res, next) {
   User.find({}, function(err, users) {
     if (err) {
+      Rollbar.error("Something went wrong get /transaction/new route", err);
       req.flash('errors', {err: err});
       return res.redirect('/');
     }
@@ -89,6 +94,7 @@ exports.postTransaction = function(req, res, next) {
   ],
   function(err, results){
     if (err) {
+      Rollbar.error("Something went wrong POST /transaction route", err);
       req.flash('errors', { err: err });
       return res.redirect('/');
     }
@@ -170,7 +176,10 @@ exports.postTransaction = function(req, res, next) {
       currentWallet.save(function(err) {
         if (err) next(err);
         requestWallet.save(function(err){
-          if (err) next(err);
+          if (err) {
+            Rollbar.error("Something went wrong POST /transaction route", err);
+            return next(err);
+          }
           if (transaction.status === 'pending') {
             Notification.create({
               sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,
@@ -194,7 +203,10 @@ exports.postTransaction = function(req, res, next) {
  */
 exports.updateTransaction = function(req, res, next) {
   Transaction.findById(req.transaction.id, function(err, transaction) {
-    if (err) return next(err);
+    if (err) {
+      Rollbar.error("Something went wrong update /transaction route", err);
+      return next(err);
+    }
     if (!req.user) return error.send(req, res, 'No user', '/');
 
     transaction.receiver = req.body.receiver || transaction.receiver;
@@ -210,7 +222,10 @@ exports.updateTransaction = function(req, res, next) {
     messenger.sendText(req.user.number, 'Transaction updated.');
 
     transaction.save(function(err) {
-      if (err) return next(err);
+      if (err) {
+        Rollbar.error("Something went wrong update /transaction route", err);
+        return next(err);
+      }
       req.flash('success', { msg: 'Transaction information updated.' });
       res.redirect('/transaction/' + transaction._id);
     });

@@ -1,5 +1,7 @@
 var secrets = require('../config/secrets');
 var nodemailer = require("nodemailer");
+var errors = require('../config/errors');
+
 var transporter = nodemailer.createTransport({
   service: 'Mailgun',
   auth: {
@@ -28,6 +30,7 @@ exports.postContact = function(req, res) {
   var errors = req.validationErrors();
 
   if (errors) {
+    errors.track('/contact', errors);
     req.flash('errors', errors);
     return res.redirect('/contact');
   }

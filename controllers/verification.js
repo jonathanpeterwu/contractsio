@@ -87,9 +87,7 @@ exports.postVerification = function(req, res, next) {
         }
       ], function(err, results) {
         if (err) return error.send(req, res, err, '/');
-        if (!err) {
-          messenger.sendText(req.user.number, 'Verification is complete on transaction');
-        }
+        messenger.sendText(req.user.number, 'Verification is complete on transaction');
         return res.redirect('/notification/' + notification._id);
       });
     });

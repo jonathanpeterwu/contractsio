@@ -180,6 +180,7 @@ exports.postTransaction = function(req, res, next) {
             Rollbar.error("Something went wrong POST /transaction route", err);
             return next(err);
           }
+          messenger.sendText(req.user.number, 'Transaction has been made on transaction');
           if (transaction.status === 'pending') {
             Notification.create({
               sender: req.body.type === 'request' ?  requestUser._id : currentUser._id,

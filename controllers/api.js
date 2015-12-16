@@ -417,7 +417,7 @@ exports.postStripe = function(req, res, next) {
  * Twilio API example.
  */
 exports.getTwilio = function(req, res) {
-  twilio = require('twilio')(secrets.twilio.sid, secrets.twilio.token);
+  twilio = require('twilio')(secrets.twilioDev.sid, secrets.twilioDev.token);
 
   res.render('api/twilio', {
     title: 'Twilio API'

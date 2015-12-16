@@ -26,7 +26,7 @@ module.exports = {
     token: 'ac3b1c8347a16a42768829ecf874a6da'
   },
 
-  rollbar {
+  rollbar: {
     id: '61a5122752af4eee9fee01e1b7070708'
   },
 

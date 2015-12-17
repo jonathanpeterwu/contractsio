@@ -66,6 +66,7 @@
     "serve-favicon": "^2.3.0",
     "speakeasy": "^1.0.3",
     "stripe": "^4.0.0",
+    "swagger-client": "^2.1.9",
     "transit-js": "0.8.670",
     "tumblr.js": "^0.0.5",
     "twilio": "^2.5.2",

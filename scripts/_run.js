@@ -4,6 +4,19 @@ var Transaction = require('../models/Transaction');
 var secrets = require('../config/secrets');
 var twilio = require('twilio');
 var client = new twilio.RestClient(secrets.twilioDev.sid, secrets.twilioDev.token);
+var client = require('swagger-client');
+var ACCESS_TOKEN = 'elq7kponDPk4iT5DUllTIHL5H5vhZCORKLQ6aB3jfkfSnqSNw6';
+var swagger = new client({
+  url: 'https://api-uat.dwolla.com/swagger.json',
+  authorizations: {
+    headerAuth: new client.ApiKeyAuthorization('Authorization', 'Bearer ' + ACCESS_TOKEN, 'header')
+  },
+  success: function() {
+    swagger.customers.list();
+  }
+});
+
+return;
 
 client.messages.create({
     body: 'Test',

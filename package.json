@@ -60,6 +60,7 @@
     "passport-oauth": "^1.0.0",
     "passport-twitter": "^1.0.3",
     "paypal-rest-sdk": "^1.6.3",
+    "plaid": "^1.0.8",
     "request": "^2.65.0",
     "rethinkdb": "^2.1.1",
     "rollbar": "^0.5.10",
@@ -74,6 +75,7 @@
     "uglify-js": "^2.5.0",
     "underscore": "^1.8.3",
     "validator": "^4.2.1",
+    "wepay": "0.0.5",
     "yui": "^3.18.1"
   },
   "devDependencies": {

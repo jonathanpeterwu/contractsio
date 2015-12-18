@@ -6,6 +6,20 @@ var twilio = require('twilio');
 var client = new twilio.RestClient(secrets.twilioDev.sid, secrets.twilioDev.token);
 var client = require('swagger-client');
 var ACCESS_TOKEN = 'elq7kponDPk4iT5DUllTIHL5H5vhZCORKLQ6aB3jfkfSnqSNw6';
+var plaid = require('plaid');
+
+
+// http://docs.seed.co/
+
+var plaidClient = new plaid.Client(client_id, secret, plaid_env);
+
+plaid.getCategory(category_id, plaid_env, callback);
+plaid.getCategories(plaid_env, callback);
+
+plaid.getInstitution(institution_id, plaid_env, callback);
+plaid.getInstitutions(plaid_env, callback);
+
+return;
 var swagger = new client({
   url: 'https://api-uat.dwolla.com/swagger.json',
   authorizations: {

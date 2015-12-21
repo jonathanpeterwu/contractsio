@@ -26,6 +26,19 @@ module.exports = {
     token: 'ac3b1c8347a16a42768829ecf874a6da'
   },
 
+  plaid: {
+    clientId: '5672147f3f6cefeb78df52ed',
+    publicKey: 'a12a90cf36cb108a40289c9ca38ce5',
+    secret: '12a358c2b5a977be0faa7e5b22617c',
+    development: 'https://tartan.plaid.com/',
+    production: 'https://api.plaid.com/'
+  },
+
+  coinbase: {
+    key: 'a8I7E6XG93RzPSv1',
+    secret: 'exErHgbnJaqknH2czRrFSATPSzma7MwQ'
+  },
+
   rollbar: {
     id: '61a5122752af4eee9fee01e1b7070708'
   },
